@@ -4,8 +4,8 @@
 import { Post } from "@/lib/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added AvatarImage
-import { Heart, MessageCircle, Share2, ThumbsDown, ExternalLink, User as UserIcon } from "lucide-react"; // Added UserIcon
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; 
+import { Heart, MessageCircle, Share2, ThumbsDown, ExternalLink, User as UserIcon } from "lucide-react"; 
 import { formatDistanceToNow } from 'date-fns';
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import Image from "next/image"; 
@@ -13,6 +13,7 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePostsStore } from "@/store/postsStore";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 interface PostCardProps {
   post: Post;
@@ -20,6 +21,7 @@ interface PostCardProps {
 
 export function PostCard({ post }: PostCardProps) {
   const updatePostReactions = usePostsStore(state => state.updatePostReactions);
+  const { user: currentUser } = useAuth(); // Get current logged-in user
 
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
@@ -36,10 +38,15 @@ export function PostCard({ post }: PostCardProps) {
   useEffect(() => {
     setLikes(post.likes);
     setDislikes(post.dislikes);
-  }, [post.likes, post.dislikes]);
+    // Here you could check if currentUser has liked/disliked this post if that state was persisted
+  }, [post.likes, post.dislikes, currentUser, post.id]);
 
 
   const handleLike = () => {
+    if (!currentUser) {
+      // Optionally prompt to sign in
+      return;
+    }
     let newLikesCount = likes;
     let newDislikesCount = dislikes;
 
@@ -56,10 +63,14 @@ export function PostCard({ post }: PostCardProps) {
     }
     setLikes(newLikesCount);
     setDislikes(newDislikesCount);
-    updatePostReactions(post.id, newLikesCount, newDislikesCount); 
+    updatePostReactions(post.id, newLikesCount, newDislikesCount, currentUser.uid); 
   };
 
   const handleDislike = () => {
+    if (!currentUser) {
+      // Optionally prompt to sign in
+      return;
+    }
     let newLikesCount = likes;
     let newDislikesCount = dislikes;
 
@@ -76,11 +87,12 @@ export function PostCard({ post }: PostCardProps) {
     }
     setLikes(newLikesCount);
     setDislikes(newDislikesCount);
-    updatePostReactions(post.id, newLikesCount, newDislikesCount); 
+    updatePostReactions(post.id, newLikesCount, newDislikesCount, currentUser.uid); 
   };
   
+  // Display post author's info if available, otherwise the generated pseudonym
   const displayName = post.userDisplayName || post.pseudonym;
-  const avatarInitial = displayName.substring(0, 1).toUpperCase();
+  const avatarInitial = displayName?.substring(0, 1).toUpperCase();
   const avatarImageSrc = post.userPhotoURL;
 
 
@@ -89,7 +101,7 @@ export function PostCard({ post }: PostCardProps) {
       <CardHeader className="flex flex-row items-center space-x-3 pb-3">
         <Avatar className="h-10 w-10">
           {avatarImageSrc ? (
-            <AvatarImage src={avatarImageSrc} alt={displayName} />
+            <AvatarImage src={avatarImageSrc} alt={displayName || "User avatar"} />
           ) : null}
           <AvatarFallback className={avatarImageSrc ? '' : 'bg-primary text-primary-foreground'}>
             {avatarInitial || <UserIcon />}
@@ -153,10 +165,22 @@ export function PostCard({ post }: PostCardProps) {
       </CardContent>
       <CardFooter className="flex justify-between items-center pt-3 border-t">
         <div className="flex space-x-2">
-          <Button variant="ghost" size="sm" onClick={handleLike} className={`flex items-center space-x-1 ${liked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleLike} 
+            className={`flex items-center space-x-1 ${liked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
+            disabled={!currentUser} // Disable if not logged in
+          >
             <Heart className={`h-5 w-5 ${liked ? 'fill-current' : ''}`} /> <span>{likes}</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleDislike} className={`flex items-center space-x-1 ${disliked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleDislike} 
+            className={`flex items-center space-x-1 ${disliked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`}
+            disabled={!currentUser} // Disable if not logged in
+          >
             <ThumbsDown className={`h-5 w-5 ${disliked ? 'fill-current' : ''}`} /> <span>{dislikes}</span>
           </Button>
         </div>
@@ -172,4 +196,3 @@ export function PostCard({ post }: PostCardProps) {
     </Card>
   );
 }
-

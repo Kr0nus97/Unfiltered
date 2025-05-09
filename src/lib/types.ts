@@ -26,7 +26,7 @@ export interface Post {
   commentsCount: number;
   isFlagged?: boolean;
   flagReason?: string;
-  userId?: string; // Optional: ID of the user who created the post
+  userId?: string; // Firebase UID of the user who created the post
   userDisplayName?: string; // Optional: Display name of the user
   userPhotoURL?: string; // Optional: Photo URL of the user
 }
@@ -254,3 +254,29 @@ export const NOUNS = [
   "Zero", "Zeus", "Zigzag", "Zinc", "Zinnia", "Zip", "Zombie", "Zone", "Zoo", "Zoom"
 ] as const;
 export type Noun = typeof NOUNS[number];
+
+export type ActivityType =
+  | 'USER_CREATED_POST' // You posted "[postSnippet]" in "[groupName]"
+  | 'USER_CREATED_GROUP' // You created the group "[groupName]"
+  | 'USER_POST_FLAGGED' // Your post "[postSnippet]" in "[groupName]" was flagged for: [reason]
+  | 'OTHERS_LIKED_USER_POST' // "[actorDisplayName]" liked your post "[postSnippet]"
+  | 'OTHERS_COMMENTED_ON_USER_POST'; // "[actorDisplayName]" commented on your post "[postSnippet]"
+
+export interface ActivityItem {
+  id: string;
+  userId: string; // User to whom this activity pertains
+  type: ActivityType;
+  timestamp: string; // ISO string
+  isRead: boolean;
+  data: {
+    postId?: string;
+    postSnippet?: string;
+    groupId?: string;
+    groupName?: string;
+    actorUserId?: string; // UID of the actor
+    actorDisplayName?: string; // Display name of the actor (e.g., who liked the post or commented)
+    actorPhotoURL?: string;
+    flagReason?: string; // For USER_POST_FLAGGED
+    commentSnippet?: string; // For OTHERS_COMMENTED_ON_USER_POST
+  };
+}

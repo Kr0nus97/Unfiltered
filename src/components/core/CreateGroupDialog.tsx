@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import type { Group } from "@/lib/types";
+import type { Group, ActivityType } from "@/lib/types";
 import { usePostsStore } from "@/store/postsStore";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2, LogIn, Image as ImageIcon } from "lucide-react";
@@ -41,6 +41,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const addGroup = usePostsStore(state => state.addGroup);
+  const addActivityItem = usePostsStore(state => state.addActivityItem);
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
 
   const form = useForm<GroupFormValues>({
@@ -74,17 +75,27 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
 
     setIsSubmitting(true);
     try {
+      const newGroupId = crypto.randomUUID();
       const newGroup: Group = {
-        id: crypto.randomUUID(),
+        id: newGroupId,
         name: data.name,
         description: data.description,
         backgroundImageUrl: data.backgroundImageUrl || undefined,
         creatorId: user.uid,
         postCount: 0,
-        memberCount: 1, // The creator is the first member
+        memberCount: 1, 
       };
 
       addGroup(newGroup);
+      addActivityItem({
+        userId: user.uid,
+        type: 'USER_CREATED_GROUP',
+        data: {
+          groupId: newGroupId,
+          groupName: data.name,
+        },
+      });
+
 
       toast({
         title: "Group Created!",
@@ -180,7 +191,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
               <Input
                 id="backgroundImageUrl"
                 type="url"
-                placeholder="https://example.com/your-cool-image.png"
+                placeholder="https://picsum.photos/seed/newgroup/600/300"
                 {...form.register("backgroundImageUrl")}
               />
             </div>

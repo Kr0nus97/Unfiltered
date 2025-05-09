@@ -21,10 +21,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { moderateContent, type ModerateContentInput, type ModerateContentOutput } from "@/ai/flows/moderate-content";
-import { Group, Post } from "@/lib/types"; 
+import type { Group, Post, ActivityType } from "@/lib/types"; 
 import { generatePseudonym } from "@/lib/pseudonyms";
 import { Globe, Image as ImageIcon, Link as LinkIcon, Loader2, Video, Music, LogIn } from "lucide-react";
-import { MOCK_GROUPS, usePostsStore } from "@/store/postsStore"; 
+import { usePostsStore } from "@/store/postsStore"; 
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -52,7 +52,8 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
   const { toast } = useToast();
   const [isModerating, setIsModerating] = useState(false);
   const addPost = usePostsStore(state => state.addPost);
-  const groups = MOCK_GROUPS; 
+  const groups = usePostsStore(state => state.groups); 
+  const addActivityItem = usePostsStore(state => state.addActivityItem);
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
 
   const form = useForm<PostFormValues>({
@@ -70,7 +71,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
   useEffect(() => {
     if (isOpen) {
       form.reset({
-        groupId: defaultGroupId || (groups.length > 0 ? groups[0].id : ""), // Fallback to first group if no default
+        groupId: defaultGroupId || (groups.length > 0 ? groups[0].id : ""), 
         text: "",
         imageUrl: "",
         videoUrl: "",
@@ -81,11 +82,10 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
   }, [isOpen, defaultGroupId, form, groups]);
   
   useEffect(() => {
-    // If user logs in while dialog is open, ensure groupId is set if it was default
-    if (user && isOpen && !form.getValues("groupId") && defaultGroupId) {
-        form.setValue("groupId", defaultGroupId);
+    if (user && isOpen && !form.getValues("groupId") && (defaultGroupId || (groups.length > 0 && !defaultGroupId))) {
+        form.setValue("groupId", defaultGroupId || groups[0].id);
     }
-  }, [user, isOpen, defaultGroupId, form]);
+  }, [user, isOpen, defaultGroupId, form, groups]);
 
 
   async function onSubmit(data: PostFormValues) {
@@ -116,11 +116,23 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
       
       const moderationResult: ModerateContentOutput = await moderateContent(contentToModerate);
 
+      const selectedGroup = groups.find(g => g.id === data.groupId);
+
       if (moderationResult.isHateSpeech || moderationResult.isSpam || moderationResult.isOffTopic) {
         toast({
           title: "Post Moderated",
           description: moderationResult.flagReason || "Your post violates community guidelines and cannot be published.",
           variant: "destructive",
+        });
+         addActivityItem({
+          userId: user.uid,
+          type: 'USER_POST_FLAGGED',
+          data: {
+            postSnippet: (data.text || "Media post").substring(0, 50) + '...',
+            groupId: data.groupId,
+            groupName: selectedGroup?.name || data.groupId,
+            flagReason: moderationResult.flagReason || "Violating community guidelines",
+          },
         });
         setIsModerating(false);
         return;
@@ -129,9 +141,9 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
       const newPost: Post = {
         id: crypto.randomUUID(),
         groupId: data.groupId,
-        groupName: groups.find(g => g.id === data.groupId)?.name,
-        pseudonym: generatePseudonym(), // User-specific pseudonym generation could be added later
-        userId: user.uid, // Associate post with user
+        groupName: selectedGroup?.name,
+        pseudonym: generatePseudonym(), 
+        userId: user.uid, 
         userDisplayName: user.displayName || "Anonymous",
         userPhotoURL: user.photoURL,
         text: data.text,
@@ -146,6 +158,17 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
       };
       
       addPost(newPost); 
+      addActivityItem({
+        userId: user.uid,
+        type: 'USER_CREATED_POST',
+        data: {
+          postId: newPost.id,
+          postSnippet: (newPost.text || "Media post").substring(0, 50) + '...',
+          groupId: newPost.groupId,
+          groupName: newPost.groupName || newPost.groupId,
+        },
+      });
+
 
       toast({
         title: "Post Created!",

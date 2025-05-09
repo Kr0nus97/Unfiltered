@@ -1,14 +1,19 @@
 
 import { create } from 'zustand';
-import type { Post, Group } from '@/lib/types';
+import type { Post, Group, ActivityItem, ActivityType } from '@/lib/types';
 import { generatePseudonym } from '@/lib/pseudonyms'; 
 
+// Mock user UIDs for demonstrating activity feed for a "logged-in" mock user
+const MOCK_USER_UID_1 = 'mock-user-uid-1';
+const MOCK_USER_UID_2 = 'mock-user-uid-2';
+
+
 export const MOCK_GROUPS: Group[] = [
-  { id: 'tech', name: 'Technology Talk', description: 'Discussions about the latest in tech, gadgets, and software.', postCount: 152, memberCount: 2300, creatorId: 'system', backgroundImageUrl: 'https://picsum.photos/seed/tech/400/200' },
+  { id: 'tech', name: 'Technology Talk', description: 'Discussions about the latest in tech, gadgets, and software.', postCount: 152, memberCount: 2300, creatorId: MOCK_USER_UID_1, backgroundImageUrl: 'https://picsum.photos/seed/techgroup/600/300' },
   { id: 'politics', name: 'Political Arena', description: 'Debates and news regarding global and local politics.', postCount: 489, memberCount: 5100, creatorId: 'system' },
-  { id: 'gaming', name: 'Game Central', description: 'Everything about video games, from retro to modern.', postCount: 765, memberCount: 8800, creatorId: 'system', backgroundImageUrl: 'https://picsum.photos/seed/gaminggroup/400/200' },
+  { id: 'gaming', name: 'Game Central', description: 'Everything about video games, from retro to modern.', postCount: 765, memberCount: 8800, creatorId: MOCK_USER_UID_2, backgroundImageUrl: 'https://picsum.photos/seed/gaminggroup/600/300' },
   { id: 'showerthoughts', name: 'Shower Thoughts', description: 'Those profound or silly thoughts you have in the shower.', postCount: 1023, memberCount: 12000, creatorId: 'system' },
-  { id: 'foodies', name: 'Food Lovers', description: 'Share recipes, restaurant reviews, and culinary adventures.', postCount: 340, memberCount: 4500, creatorId: 'system', backgroundImageUrl: 'https://picsum.photos/seed/foodies/400/200' },
+  { id: 'foodies', name: 'Food Lovers', description: 'Share recipes, restaurant reviews, and culinary adventures.', postCount: 340, memberCount: 4500, creatorId: MOCK_USER_UID_1, backgroundImageUrl: 'https://picsum.photos/seed/foodiesgroup/600/300' },
   { id: 'books', name: 'Bookworms Corner', description: 'Discuss your favorite books, authors, and genres.', postCount: 210, memberCount: 3200, creatorId: 'system' },
   { id: 'music', name: 'Music Hub', description: 'Share and discover new music, artists, and genres.', postCount: 180, memberCount: 2800, creatorId: 'system' },
   { id: 'videos', name: 'Video Vibes', description: 'Interesting videos, short films, and discussions.', postCount: 95, memberCount: 1500, creatorId: 'system' },
@@ -27,6 +32,9 @@ const MOCK_POSTS: Post[] = [
     likes: 15,
     dislikes: 1,
     commentsCount: 5,
+    userId: MOCK_USER_UID_1,
+    userDisplayName: "Tech Enthusiast",
+    userPhotoURL: "https://picsum.photos/seed/user1/40/40",
   },
   {
     id: '2',
@@ -39,6 +47,7 @@ const MOCK_POSTS: Post[] = [
     likes: 45,
     dislikes: 12,
     commentsCount: 22,
+    userId: 'another-user-uid',
   },
   {
     id: '3',
@@ -50,6 +59,9 @@ const MOCK_POSTS: Post[] = [
     likes: 102,
     dislikes: 3,
     commentsCount: 15,
+    userId: MOCK_USER_UID_2,
+    userDisplayName: "Thinker",
+    userPhotoURL: "https://picsum.photos/seed/user2/40/40",
   },
     {
     id: '4',
@@ -62,6 +74,7 @@ const MOCK_POSTS: Post[] = [
     likes: 78,
     dislikes: 5,
     commentsCount: 30,
+    userId: MOCK_USER_UID_1,
   },
   {
     id: '5',
@@ -75,6 +88,7 @@ const MOCK_POSTS: Post[] = [
     likes: 62,
     dislikes: 2,
     commentsCount: 18,
+    userId: MOCK_USER_UID_1,
   },
    {
     id: '6',
@@ -86,6 +100,7 @@ const MOCK_POSTS: Post[] = [
     likes: 33,
     dislikes: 0,
     commentsCount: 12,
+    userId: MOCK_USER_UID_2,
   },
   {
     id: '7',
@@ -98,6 +113,7 @@ const MOCK_POSTS: Post[] = [
     likes: 50,
     dislikes: 1,
     commentsCount: 9,
+    userId: MOCK_USER_UID_1,
   },
   {
     id: '8',
@@ -110,6 +126,7 @@ const MOCK_POSTS: Post[] = [
     likes: 88,
     dislikes: 2,
     commentsCount: 14,
+    userId: 'another-user-uid',
   },
   {
     id: '9',
@@ -122,6 +139,7 @@ const MOCK_POSTS: Post[] = [
     likes: 55,
     dislikes: 0,
     commentsCount: 7,
+    userId: MOCK_USER_UID_2,
   },
   {
     id: '10',
@@ -134,23 +152,110 @@ const MOCK_POSTS: Post[] = [
     likes: 67,
     dislikes: 3,
     commentsCount: 11,
+    userId: MOCK_USER_UID_1,
   },
 ];
+
+const MOCK_ACTIVITY_FEED: ActivityItem[] = [
+  {
+    id: 'act1',
+    userId: MOCK_USER_UID_1,
+    type: 'USER_CREATED_POST',
+    timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 30).toISOString(),
+    isRead: false,
+    data: {
+      postId: '1',
+      postSnippet: "Just upgraded to the latest Quantum Processor X1!...",
+      groupId: 'tech',
+      groupName: 'Technology Talk',
+    },
+  },
+  {
+    id: 'act2',
+    userId: MOCK_USER_UID_1,
+    type: 'OTHERS_LIKED_USER_POST',
+    timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 25).toISOString(),
+    isRead: true,
+    data: {
+      postId: '1',
+      postSnippet: "Just upgraded to the latest Quantum Processor X1!...",
+      groupId: 'tech',
+      groupName: 'Technology Talk',
+      actorDisplayName: 'RandomUser123',
+      actorPhotoURL: 'https://picsum.photos/seed/actor1/40/40',
+    },
+  },
+  {
+    id: 'act3',
+    userId: MOCK_USER_UID_1,
+    type: 'USER_CREATED_GROUP',
+    timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 2).toISOString(),
+    isRead: false,
+    data: {
+      groupId: 'foodies',
+      groupName: 'Food Lovers',
+    },
+  },
+  {
+    id: 'act4',
+    userId: MOCK_USER_UID_1, // Belongs to MOCK_USER_UID_1
+    type: 'USER_POST_FLAGGED',
+    timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 15).toISOString(),
+    isRead: false,
+    data: {
+      postId: '4', // Let's assume post '4' was flagged
+      postSnippet: "CyberNeon Chronicles just dropped its new DLC...",
+      groupId: 'gaming',
+      groupName: 'Game Central',
+      flagReason: 'Potentially controversial content.',
+    },
+  },
+  {
+    id: 'act5',
+    userId: MOCK_USER_UID_1,
+    type: 'OTHERS_COMMENTED_ON_USER_POST',
+    timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 10).toISOString(),
+    isRead: true,
+    data: {
+      postId: '1',
+      postSnippet: "Just upgraded to the latest Quantum Processor X1!...",
+      groupId: 'tech',
+      groupName: 'Technology Talk',
+      actorDisplayName: 'HelpfulCommenter',
+      actorPhotoURL: 'https://picsum.photos/seed/actor2/40/40',
+      commentSnippet: 'That sounds awesome! I was thinking of getting one.'
+    },
+  },
+];
+
 
 interface PostsState {
   posts: Post[];
   groups: Group[];
+  activityFeed: ActivityItem[];
   addPost: (post: Post) => void;
   getPostsByGroupId: (groupId: string) => Post[];
   getAllPosts: () => Post[];
   getGroupById: (groupId: string) => Group | undefined;
-  updatePostReactions: (postId: string, newLikes: number, newDislikes: number) => void;
+  updatePostReactions: (postId: string, newLikes: number, newDislikes: number, actingUserId?: string) => void;
   addGroup: (group: Group) => void;
+  
+  // Activity Feed actions
+  addActivityItem: (itemDetails: {
+    userId: string;
+    type: ActivityType;
+    data: ActivityItem['data'];
+  }) => void;
+  getUserActivities: (userId: string) => ActivityItem[];
+  markActivityAsRead: (userId: string, activityId: string) => void;
+  markAllActivitiesAsRead: (userId: string) => void;
 }
 
 export const usePostsStore = create<PostsState>((set, get) => ({
   posts: MOCK_POSTS, 
   groups: MOCK_GROUPS,
+  activityFeed: MOCK_ACTIVITY_FEED,
+
   addPost: (post) => {
     const newPostWithGeneratedPseudonym = {
       ...post,
@@ -162,20 +267,90 @@ export const usePostsStore = create<PostsState>((set, get) => ({
   getPostsByGroupId: (groupId) => get().posts.filter(post => post.groupId === groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   getAllPosts: () => get().posts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   getGroupById: (groupId: string) => get().groups.find(group => group.id === groupId),
-  updatePostReactions: (postId: string, newLikes: number, newDislikes: number) => set((state) => ({
-    posts: state.posts.map(p =>
-      p.id === postId ? { ...p, likes: newLikes, dislikes: newDislikes } : p
-    ),
-  })),
+  
+  updatePostReactions: (postId: string, newLikes: number, newDislikes: number, actingUserId?: string) => {
+    const post = get().posts.find(p => p.id === postId);
+    if (!post) return;
+
+    set((state) => ({
+      posts: state.posts.map(p =>
+        p.id === postId ? { ...p, likes: newLikes, dislikes: newDislikes } : p
+      ),
+    }));
+
+    // If an actingUser exists and is not the post owner, create activity for post owner
+    if (actingUserId && post.userId && actingUserId !== post.userId) {
+      const actor = get().posts.find(p => p.userId === actingUserId) || { displayName: generatePseudonym(), photoURL: `https://picsum.photos/seed/${actingUserId}/40/40`}; // Simplification for mock
+      const liked = newLikes > post.likes;
+      const disliked = newDislikes > post.dislikes;
+
+      if (liked) {
+        get().addActivityItem({
+          userId: post.userId,
+          type: 'OTHERS_LIKED_USER_POST',
+          data: {
+            postId: post.id,
+            postSnippet: post.text?.substring(0, 50) + (post.text && post.text.length > 50 ? '...' : ''),
+            groupId: post.groupId,
+            groupName: post.groupName,
+            actorUserId: actingUserId,
+            actorDisplayName: actor.userDisplayName || 'An anonymous user',
+            actorPhotoURL: actor.userPhotoURL,
+          },
+        });
+      }
+      // Note: Similar logic for dislikes or comments would go here.
+    }
+  },
+
   addGroup: (group) => {
     const newGroupWithDefaults = {
       ...group,
-      id: group.id || crypto.randomUUID(), // Ensure ID if not provided
+      id: group.id || crypto.randomUUID(), 
       postCount: group.postCount || 0,
-      memberCount: group.memberCount || 1, // Creator is the first member
+      memberCount: group.memberCount || 1,
     };
     set((state) => ({
       groups: [newGroupWithDefaults, ...state.groups],
+    }));
+  },
+
+  // Activity Feed implementations
+  addActivityItem: (itemDetails) => {
+    const newActivity: ActivityItem = {
+      id: crypto.randomUUID(),
+      userId: itemDetails.userId,
+      type: itemDetails.type,
+      timestamp: new Date().toISOString(),
+      isRead: false,
+      data: itemDetails.data,
+    };
+    set((state) => ({
+      activityFeed: [newActivity, ...state.activityFeed].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+    }));
+  },
+
+  getUserActivities: (userId: string) => {
+    return get().activityFeed
+      .filter(activity => activity.userId === userId)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  },
+
+  markActivityAsRead: (userId: string, activityId: string) => {
+    set((state) => ({
+      activityFeed: state.activityFeed.map(activity =>
+        activity.id === activityId && activity.userId === userId
+          ? { ...activity, isRead: true }
+          : activity
+      ),
+    }));
+  },
+
+  markAllActivitiesAsRead: (userId: string) => {
+    set((state) => ({
+      activityFeed: state.activityFeed.map(activity =>
+        activity.userId === userId ? { ...activity, isRead: true } : activity
+      ),
     }));
   },
 }));
