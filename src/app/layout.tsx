@@ -1,10 +1,11 @@
+
 "use client"; // Keep this for AppProviders and ThemeProvider context
 
-import type { Metadata } from 'next';
 import { Inter, Roboto_Mono } from 'next/font/google';
 import './globals.css';
 import { AppProviders } from '@/components/core/AppProviders';
 import { AppShell } from '@/components/core/AppShell';
+import { AuthProvider } from '@/context/AuthContext'; // Import AuthProvider
 import { useEffect, useState } from 'react';
 
 const inter = Inter({
@@ -18,15 +19,7 @@ const robotoMono = Roboto_Mono({
   weight: ['400', '700'],
 });
 
-// Metadata needs to be exported from a Server Component or a static file.
-// Since this is a client component due to AppProviders, we cannot export metadata here.
-// It should be moved to a parent server component or defined statically if possible.
-/*
-export const metadata: Metadata = {
-  title: 'UnFiltered - Anonymous Social Platform',
-  description: 'Share your opinions freely and anonymously.',
-};
-*/
+// Metadata is defined in src/app/metadata.ts now
 
 export default function RootLayout({
   children,
@@ -52,10 +45,12 @@ export default function RootLayout({
 
   return (
     <html lang="en" className={htmlClassName} suppressHydrationWarning>
-      <body className={bodyClassName} suppressHydrationWarning> {/* Added suppressHydrationWarning */}
-        <AppProviders>
-          <AppShell>{children}</AppShell>
-        </AppProviders>
+      <body className={bodyClassName} suppressHydrationWarning>
+        <AuthProvider> {/* Wrap AppProviders with AuthProvider */}
+          <AppProviders>
+            <AppShell>{children}</AppShell>
+          </AppProviders>
+        </AuthProvider>
       </body>
     </html>
   );
