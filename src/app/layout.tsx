@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import AppHeader from '@/components/core/AppHeader';
 import { AppProviders } from '@/components/core/AppProviders';
+import { ClientFooterYear } from '@/components/core/ClientFooterYear';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -35,7 +36,7 @@ export default function RootLayout({
           </main>
           <Toaster />
           <footer className="py-6 text-center text-muted-foreground text-sm border-t">
-            © {new Date().getFullYear()} UnFiltered. All rights reserved (not really).
+            © <ClientFooterYear /> UnFiltered. All rights reserved (not really).
           </footer>
         </AppProviders>
       </body>
