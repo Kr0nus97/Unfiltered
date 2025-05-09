@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Home, Users } from "lucide-react";
-import { CreatePostDialog } from "./CreatePostDialog"; // Will create this next
+import { CreatePostDialog } from "./CreatePostDialog"; 
 import React from "react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function AppHeader() {
   const [isCreatePostOpen, setIsCreatePostOpen] = React.useState(false);
@@ -39,6 +40,7 @@ export default function AppHeader() {
             <Button onClick={() => setIsCreatePostOpen(true)} variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground">
               <PlusCircle className="mr-2 h-5 w-5" /> Create Post
             </Button>
+            <ThemeToggle />
           </div>
         </div>
       </header>
