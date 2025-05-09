@@ -72,11 +72,11 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
         </Avatar>
         <div>
           <CardTitle className="text-lg font-semibold">{post.pseudonym}</CardTitle>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground"> {/* Changed p to div */}
             Posted in <Link href={`/groups/${post.groupId}`} className="text-accent hover:underline">{post.groupName || post.groupId}</Link>
             {' \u00b7 '}
             {timeAgo !== null ? timeAgo : <Skeleton className="h-3 w-20 inline-block" />}
-          </p>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pb-4">
