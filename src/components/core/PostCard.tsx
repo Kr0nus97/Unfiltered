@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Post } from "@/lib/types";
@@ -9,7 +10,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import Image from "next/image"; 
 import Link from "next/link";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PostCardProps {
   post: Post;
@@ -18,10 +20,17 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, onLike, onDislike }: PostCardProps) {
-  const [liked, setLiked] = React.useState(false);
-  const [disliked, setDisliked] = React.useState(false);
-  const [likes, setLikes] = React.useState(post.likes);
-  const [dislikes, setDislikes] = React.useState(post.dislikes);
+  const [liked, setLiked] = useState(false);
+  const [disliked, setDisliked] = useState(false);
+  const [likes, setLikes] = useState(post.likes);
+  const [dislikes, setDislikes] = useState(post.dislikes);
+  const [timeAgo, setTimeAgo] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (post.createdAt) {
+      setTimeAgo(formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }));
+    }
+  }, [post.createdAt]);
 
   const handleLike = () => {
     if (liked) {
@@ -66,7 +75,7 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
           <p className="text-xs text-muted-foreground">
             Posted in <Link href={`/groups/${post.groupId}`} className="text-accent hover:underline">{post.groupName || post.groupId}</Link>
             {' \u00b7 '}
-            {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+            {timeAgo !== null ? timeAgo : <Skeleton className="h-3 w-20 inline-block" />}
           </p>
         </div>
       </CardHeader>
@@ -138,3 +147,4 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
     </Card>
   );
 }
+

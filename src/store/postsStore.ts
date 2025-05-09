@@ -1,6 +1,7 @@
+
 import { create } from 'zustand';
 import type { Post, Group } from '@/lib/types';
-import { generatePseudonym } from '@/lib/pseudonyms';
+import { generatePseudonym } from '@/lib/pseudonyms'; // Kept for potential future use (e.g. new post creation)
 
 export const MOCK_GROUPS: Group[] = [
   { id: 'tech', name: 'Technology Talk', description: 'Discussions about the latest in tech, gadgets, and software.', postCount: 152, memberCount: 2300, themeColor: 'bg-blue-500' },
@@ -13,14 +14,17 @@ export const MOCK_GROUPS: Group[] = [
   { id: 'videos', name: 'Video Vibes', description: 'Interesting videos, short films, and discussions.', postCount: 95, memberCount: 1500, themeColor: 'bg-teal-500' },
 ];
 
+// Use a fixed base date for consistent "createdAt" mock timestamps
+const BASE_DATE = new Date('2024-07-15T12:00:00.000Z');
+
 const MOCK_POSTS: Post[] = [
   {
     id: '1',
     groupId: 'tech',
     groupName: 'Technology Talk',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Clever_Circuit", // Hardcoded
     text: "Just upgraded to the latest **Quantum Processor X1**! Performance is mind-blowing. Anyone else tried it? It's supposed to be 50% faster in multi-core tasks. Check out the [official benchmarks](https://example.com/benchmarks).",
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 30).toISOString(), // 30 mins before BASE_DATE
     likes: 15,
     dislikes: 1,
     commentsCount: 5,
@@ -29,10 +33,10 @@ const MOCK_POSTS: Post[] = [
     id: '2',
     groupId: 'politics',
     groupName: 'Political Arena',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Brave_Beacon", // Hardcoded
     text: "The new environmental bill proposal seems promising, but I'm concerned about its economic impact. What are your thoughts? It aims to reduce emissions by 30% by 2030.",
     imageUrl: 'https://picsum.photos/seed/politics/600/300',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours before BASE_DATE
     likes: 45,
     dislikes: 12,
     commentsCount: 22,
@@ -41,9 +45,9 @@ const MOCK_POSTS: Post[] = [
     id: '3',
     groupId: 'showerthoughts',
     groupName: 'Shower Thoughts',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Quirky_Quasar", // Hardcoded
     text: "If we can't see air, do fish see water?",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours before BASE_DATE
     likes: 102,
     dislikes: 3,
     commentsCount: 15,
@@ -52,10 +56,10 @@ const MOCK_POSTS: Post[] = [
     id: '4',
     groupId: 'gaming',
     groupName: 'Game Central',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Epic_Elixir", // Hardcoded
     text: "CyberNeon Chronicles just dropped its new DLC. The storyline is epic! And the new zone looks amazing.",
     imageUrl: 'https://picsum.photos/seed/gaming/600/400',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(), // 8 hours ago
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 8).toISOString(), // 8 hours before BASE_DATE
     likes: 78,
     dislikes: 5,
     commentsCount: 30,
@@ -64,11 +68,11 @@ const MOCK_POSTS: Post[] = [
     id: '5',
     groupId: 'foodies',
     groupName: 'Food Lovers',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Zesty_Zucchini", // Hardcoded
     text: "Found this amazing recipe for vegan lasagna. You won't believe it's not dairy! [Link to recipe](https://example.com/vegan-lasagna)",
     linkUrl: "https://example.com/vegan-lasagna",
     linkTitle: "Amazing Vegan Lasagna Recipe",
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 24).toISOString(), // 1 day before BASE_DATE
     likes: 62,
     dislikes: 2,
     commentsCount: 18,
@@ -77,9 +81,9 @@ const MOCK_POSTS: Post[] = [
     id: '6',
     groupId: 'tech',
     groupName: 'Technology Talk',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Digital_Dynamo", // Hardcoded
     text: "AI is evolving so fast. What are some ethical considerations we should be discussing more openly?",
-    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 45).toISOString(), // 45 mins before BASE_DATE
     likes: 33,
     dislikes: 0,
     commentsCount: 12,
@@ -88,10 +92,10 @@ const MOCK_POSTS: Post[] = [
     id: '7',
     groupId: 'books',
     groupName: 'Bookworms Corner',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Ancient_Atlas", // Hardcoded
     text: "Just finished reading 'Dune Messiah'. What a sequel! The philosophical undertones are even deeper than the first book. Highly recommend for sci-fi fans who love complex narratives.",
     imageUrl: 'https://picsum.photos/seed/books/600/350',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 3).toISOString(), // 3 hours before BASE_DATE
     likes: 50,
     dislikes: 1,
     commentsCount: 9,
@@ -100,10 +104,10 @@ const MOCK_POSTS: Post[] = [
     id: '8',
     groupId: 'videos',
     groupName: 'Video Vibes',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Vibrant_Vortex", // Hardcoded
     text: "Check out this incredible drone footage of the Northern Lights!",
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', // Example public MP4 video
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(), // 1 hour ago
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 1).toISOString(), // 1 hour before BASE_DATE
     likes: 88,
     dislikes: 2,
     commentsCount: 14,
@@ -112,10 +116,10 @@ const MOCK_POSTS: Post[] = [
     id: '9',
     groupId: 'music',
     groupName: 'Music Hub',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Sonic_Synth", // Hardcoded
     text: "This new lofi track is perfect for studying. So chill.",
-    audioUrl: 'https://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg', // Example public OGG audio
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
+    audioUrl: 'https://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg',
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours before BASE_DATE
     likes: 55,
     dislikes: 0,
     commentsCount: 7,
@@ -124,10 +128,10 @@ const MOCK_POSTS: Post[] = [
     id: '10',
     groupId: 'gaming',
     groupName: 'Game Central',
-    pseudonym: generatePseudonym(),
+    pseudonym: "Pixel_Pioneer", // Hardcoded
     text: "Hilarious gaming moments compilation video I found.",
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // Another example video
-    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), // 90 mins ago
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 90).toISOString(), // 90 mins before BASE_DATE
     likes: 67,
     dislikes: 3,
     commentsCount: 11,
@@ -144,9 +148,16 @@ interface PostsState {
 }
 
 export const usePostsStore = create<PostsState>((set, get) => ({
-  posts: MOCK_POSTS,
+  posts: MOCK_POSTS, // Now uses the fully static MOCK_POSTS
   groups: MOCK_GROUPS,
-  addPost: (post) => set((state) => ({ posts: [post, ...state.posts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) })),
+  addPost: (post) => {
+    const newPostWithGeneratedPseudonym = {
+      ...post,
+      pseudonym: post.pseudonym || generatePseudonym(), // Generate pseudonym if not provided (e.g. for new posts)
+      createdAt: post.createdAt || new Date().toISOString(), // Set createdAt if not provided
+    };
+    set((state) => ({ posts: [newPostWithGeneratedPseudonym, ...state.posts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) }));
+  },
   getPostsByGroupId: (groupId) => get().posts.filter(post => post.groupId === groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   getAllPosts: () => get().posts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   getGroupById: (groupId: string) => get().groups.find(group => group.id === groupId),
