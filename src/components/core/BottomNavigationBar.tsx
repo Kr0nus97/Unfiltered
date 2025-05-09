@@ -18,7 +18,7 @@ export default function BottomNavigationBar({ openCreatePostDialog }: BottomNavi
     { href: "/", label: "FEED", icon: LayoutGrid },
     { href: "/groups", label: "GROUPS", icon: Users },
     // The "POST" button is special and handled separately
-    { href: "/me", label: "ME", icon: User }, 
+    { href: "/account", label: "ME", icon: User }, 
     { href: "/activity", label: "ACTIVITY", icon: Activity }, 
   ];
 
@@ -77,3 +77,4 @@ export default function BottomNavigationBar({ openCreatePostDialog }: BottomNavi
     </nav>
   );
 }
+

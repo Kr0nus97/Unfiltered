@@ -12,14 +12,15 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePostsStore } from "@/store/postsStore";
 
 interface PostCardProps {
   post: Post;
-  onLike?: (postId: string) => void;
-  onDislike?: (postId: string) => void;
 }
 
-export function PostCard({ post, onLike, onDislike }: PostCardProps) {
+export function PostCard({ post }: PostCardProps) {
+  const updatePostReactions = usePostsStore(state => state.updatePostReactions);
+
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [likes, setLikes] = useState(post.likes);
@@ -32,34 +33,55 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
     }
   }, [post.createdAt]);
 
+  useEffect(() => {
+    setLikes(post.likes);
+    setDislikes(post.dislikes);
+    // Reset local liked/disliked state if post prop changes fundamentally,
+    // or if external likes/dislikes changed (e.g. from another user).
+    // For this demo, we'll assume local state is king for the current user's session.
+    // If a real-time system were in place, this might need more sophisticated logic
+    // to reconcile local state with server state.
+  }, [post.likes, post.dislikes]);
+
+
   const handleLike = () => {
-    if (liked) {
+    let newLikesCount = likes;
+    let newDislikesCount = dislikes;
+
+    if (liked) { 
       setLiked(false);
-      setLikes(prev => prev -1);
-    } else {
+      newLikesCount = likes - 1;
+    } else { 
       setLiked(true);
-      setLikes(prev => prev + 1);
-      if (disliked) {
+      newLikesCount = likes + 1;
+      if (disliked) { 
         setDisliked(false);
-        setDislikes(prev => prev -1);
+        newDislikesCount = dislikes - 1;
       }
     }
-    onLike?.(post.id);
+    setLikes(newLikesCount);
+    setDislikes(newDislikesCount);
+    updatePostReactions(post.id, newLikesCount, newDislikesCount); 
   };
 
   const handleDislike = () => {
-    if (disliked) {
+    let newLikesCount = likes;
+    let newDislikesCount = dislikes;
+
+    if (disliked) { 
       setDisliked(false);
-      setDislikes(prev => prev -1);
-    } else {
+      newDislikesCount = dislikes - 1;
+    } else { 
       setDisliked(true);
-      setDislikes(prev => prev +1);
-      if (liked) {
+      newDislikesCount = dislikes + 1;
+      if (liked) { 
         setLiked(false);
-        setLikes(prev => prev -1);
+        newLikesCount = likes - 1;
       }
     }
-    onDislike?.(post.id);
+    setLikes(newLikesCount);
+    setDislikes(newDislikesCount);
+    updatePostReactions(post.id, newLikesCount, newDislikesCount); 
   };
   
   const pseudonymInitial = post.pseudonym.substring(0, 1).toUpperCase();
@@ -147,3 +169,4 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
     </Card>
   );
 }
+
