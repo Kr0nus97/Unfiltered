@@ -1,6 +1,7 @@
+
 "use client";
 
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -13,7 +14,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function ThemeToggle() {
+  const [mounted, setMounted] = useState(false);
   const { setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    // Render a placeholder button to prevent layout shifts and hydration errors
+    return (
+      <Button variant="outline" size="icon" disabled>
+        <Sun className="h-[1.2rem] w-[1.2rem]" /> {/* Default or neutral icon */}
+        <span className="sr-only">Loading theme toggle...</span>
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu>
