@@ -1,18 +1,19 @@
 
 import type { Metadata } from 'next';
-import { GeistSans as ImportedGeistSans, GeistMono as ImportedGeistMono } from 'next/font/google';
+import { Inter, Roboto_Mono } from 'next/font/google';
 import './globals.css';
 import { AppProviders } from '@/components/core/AppProviders';
 import { AppShell } from '@/components/core/AppShell';
 
-const geistSans = ImportedGeistSans({
-  variable: '--font-geist-sans',
+const inter = Inter({
+  variable: '--font-geist-sans', // Keep original CSS variable name
   subsets: ['latin'],
 });
 
-const geistMono = ImportedGeistMono({
-  variable: '--font-geist-mono',
+const robotoMono = Roboto_Mono({
+  variable: '--font-geist-mono', // Keep original CSS variable name
   subsets: ['latin'],
+  weight: ['400', '700'], // Roboto Mono often needs weights specified
 });
 
 export const metadata: Metadata = {
@@ -27,9 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body 
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
-        suppressHydrationWarning // Added to address persistent hydration error on body
+      <body
+        className={`${inter.variable} ${robotoMono.variable} antialiased flex flex-col min-h-screen`}
+        suppressHydrationWarning
       >
         <AppProviders>
           <AppShell>{children}</AppShell>
