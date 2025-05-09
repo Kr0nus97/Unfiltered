@@ -1,3 +1,4 @@
+
 export interface Group {
   id: string;
   name: string;
@@ -24,6 +25,9 @@ export interface Post {
   commentsCount: number;
   isFlagged?: boolean;
   flagReason?: string;
+  userId?: string; // Optional: ID of the user who created the post
+  userDisplayName?: string; // Optional: Display name of the user
+  userPhotoURL?: string; // Optional: Photo URL of the user
 }
 
 export type Adjective = typeof ADJECTIVES[number];
@@ -250,4 +254,5 @@ export const NOUNS = [
   "Yeti", "Yield", "Yodel", "Yoga", "Yogurt", "Yolk", "Youth", "Zebra", "Zenith", "Zephyr",
   "Zero", "Zeus", "Zigzag", "Zinc", "Zinnia", "Zip", "Zombie", "Zone", "Zoo", "Zoom"
 ] as const;
+
 

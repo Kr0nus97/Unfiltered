@@ -23,8 +23,10 @@ import { useToast } from "@/hooks/use-toast";
 import { moderateContent, type ModerateContentInput, type ModerateContentOutput } from "@/ai/flows/moderate-content";
 import { Group, Post } from "@/lib/types"; 
 import { generatePseudonym } from "@/lib/pseudonyms";
-import { Globe, Image as ImageIcon, Link as LinkIcon, Loader2, Video, Music } from "lucide-react";
+import { Globe, Image as ImageIcon, Link as LinkIcon, Loader2, Video, Music, LogIn } from "lucide-react";
 import { MOCK_GROUPS, usePostsStore } from "@/store/postsStore"; 
+import { useAuth } from "@/context/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const postFormSchema = z.object({
   groupId: z.string().min(1, "Please select a group"),
@@ -51,6 +53,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
   const [isModerating, setIsModerating] = useState(false);
   const addPost = usePostsStore(state => state.addPost);
   const groups = MOCK_GROUPS; 
+  const { user, loading: authLoading, signInWithGoogle } = useAuth();
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postFormSchema),
@@ -67,7 +70,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
   useEffect(() => {
     if (isOpen) {
       form.reset({
-        groupId: defaultGroupId || "",
+        groupId: defaultGroupId || (groups.length > 0 ? groups[0].id : ""), // Fallback to first group if no default
         text: "",
         imageUrl: "",
         videoUrl: "",
@@ -75,9 +78,26 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         linkUrl: "",
       });
     }
-  }, [isOpen, defaultGroupId, form]);
+  }, [isOpen, defaultGroupId, form, groups]);
+  
+  useEffect(() => {
+    // If user logs in while dialog is open, ensure groupId is set if it was default
+    if (user && isOpen && !form.getValues("groupId") && defaultGroupId) {
+        form.setValue("groupId", defaultGroupId);
+    }
+  }, [user, isOpen, defaultGroupId, form]);
+
 
   async function onSubmit(data: PostFormValues) {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create a post.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsModerating(true);
     try {
       const contentToModerate: ModerateContentInput = {
@@ -110,7 +130,10 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         id: crypto.randomUUID(),
         groupId: data.groupId,
         groupName: groups.find(g => g.id === data.groupId)?.name,
-        pseudonym: generatePseudonym(),
+        pseudonym: generatePseudonym(), // User-specific pseudonym generation could be added later
+        userId: user.uid, // Associate post with user
+        userDisplayName: user.displayName || "Anonymous",
+        userPhotoURL: user.photoURL,
         text: data.text,
         imageUrl: data.imageUrl,
         videoUrl: data.videoUrl,
@@ -142,9 +165,42 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
     }
   }
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px] bg-card">
+  const renderDialogContent = () => {
+    if (authLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center space-y-4 py-10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Checking authentication status...</p>
+        </div>
+      );
+    }
+
+    if (!user) {
+      return (
+        <div className="py-10 text-center">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold">Sign In Required</DialogTitle>
+            <DialogDescription className="mt-2">
+              You need to be signed in to create a post on UnFiltered.
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={signInWithGoogle} className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
+            <LogIn className="mr-2 h-4 w-4" />
+            Sign in with Google
+          </Button>
+          <DialogFooter className="sm:justify-center mt-8">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </div>
+      );
+    }
+
+    return (
+      <>
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">Create Anonymous Post</DialogTitle>
           <DialogDescription>
@@ -161,7 +217,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
                 <Select 
                   onValueChange={field.onChange} 
                   value={field.value} 
-                  defaultValue={defaultGroupId} 
+                  defaultValue={field.value || defaultGroupId || (groups.length > 0 ? groups[0].id : "")}
                 >
                   <SelectTrigger id="groupId" aria-label="Select group">
                     <SelectValue placeholder="Select a group..." />
@@ -259,7 +315,6 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
              <p className="text-sm text-destructive">{form.formState.errors.text.message}</p>
            )}
 
-
           <DialogFooter className="pt-4">
             <DialogClose asChild>
               <Button type="button" variant="outline">
@@ -278,6 +333,14 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
             </Button>
           </DialogFooter>
         </form>
+      </>
+    );
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[525px] bg-card">
+        {renderDialogContent()}
       </DialogContent>
     </Dialog>
   );

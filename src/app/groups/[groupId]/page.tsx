@@ -11,11 +11,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 export default function GroupPage() {
   const params = useParams();
   const groupId = params.groupId as string;
 
+  const { user, loading: authLoading } = useAuth(); // Get user and auth loading state
   const getPostsByGroupId = usePostsStore(state => state.getPostsByGroupId);
   const getGroupById = usePostsStore(state => state.getGroupById);
   const openCreatePostDialog = useUiStore(state => state.openCreatePostDialog);
@@ -36,13 +38,13 @@ export default function GroupPage() {
   }, [groupId, getPostsByGroupId, getGroupById]);
 
   useEffect(() => {
-    if (group) {
-        setPosts(getPostsByGroupId(groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    }
-  }, [usePostsStore(state => state.posts), group, groupId, getPostsByGroupId]);
+    // Re-fetch/re-sort posts if the global posts state changes (e.g., a new post is added)
+     const newPosts = getPostsByGroupId(groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+     setPosts(newPosts);
+  }, [usePostsStore(state => state.posts), groupId, getPostsByGroupId]);
 
 
-  if (isLoading) {
+  if (isLoading || authLoading) { // Consider authLoading as well
      return (
       <div className="max-w-2xl mx-auto">
         <Skeleton className="h-10 w-3/4 mb-2" />
@@ -88,7 +90,13 @@ export default function GroupPage() {
             <h1 className="text-3xl font-bold text-primary mb-2">{group.name}</h1>
             <p className="text-muted-foreground mb-4">{group.description}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleOpenCreatePostInGroup} className="ml-4 hidden md:inline-flex border-accent text-accent hover:bg-accent hover:text-accent-foreground">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleOpenCreatePostInGroup} 
+            className="ml-4 hidden md:inline-flex border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+            // Disabled state could be handled if !user and !authLoading, but dialog will prompt sign-in
+          >
             <Edit3 className="mr-2 h-4 w-4" /> Post to Group
           </Button>
         </div>
@@ -97,7 +105,13 @@ export default function GroupPage() {
         </Link>
       </div>
        <div className="md:hidden mb-6">
-          <Button variant="default" size="lg" onClick={handleOpenCreatePostInGroup} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button 
+            variant="default" 
+            size="lg" 
+            onClick={handleOpenCreatePostInGroup} 
+            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+            // Disabled state could be handled if !user and !authLoading, but dialog will prompt sign-in
+          >
             <Edit3 className="mr-2 h-5 w-5" /> Post to {group.name}
           </Button>
         </div>
@@ -111,7 +125,11 @@ export default function GroupPage() {
         <div className="text-center py-10 bg-card rounded-lg shadow-md border">
           <h2 className="text-xl font-semibold text-muted-foreground">No posts in this group yet.</h2>
           <p className="text-muted-foreground mt-2">Why not be the first to share something?</p>
-          <Button onClick={handleOpenCreatePostInGroup} className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground hidden md:inline-flex">
+          <Button 
+            onClick={handleOpenCreatePostInGroup} 
+            className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground hidden md:inline-flex"
+            // Disabled state could be handled if !user and !authLoading, but dialog will prompt sign-in
+          >
              Create First Post
           </Button>
         </div>

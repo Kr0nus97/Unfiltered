@@ -6,6 +6,7 @@ import { LayoutGrid, Users, Plus, User, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 interface BottomNavigationBarProps {
   openCreatePostDialog: (defaultGroupId?: string) => void;
@@ -13,6 +14,8 @@ interface BottomNavigationBarProps {
 
 export default function BottomNavigationBar({ openCreatePostDialog }: BottomNavigationBarProps) {
   const pathname = usePathname();
+  const { user, loading: authLoading } = useAuth(); // Get user and auth loading state
+
 
   const navItems = [
     { href: "/", label: "FEED", icon: LayoutGrid },
@@ -50,6 +53,8 @@ export default function BottomNavigationBar({ openCreatePostDialog }: BottomNavi
           className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg transform -translate-y-5 flex flex-col items-center justify-center p-2"
           onClick={() => openCreatePostDialog()} 
           aria-label="Create Post"
+          // Button is not disabled here; dialog will handle auth check
+          // disabled={authLoading} // Optionally disable if auth is still loading
         >
           <Plus className="h-6 w-6" />
           <span className="mt-0.5 text-xs font-medium">POST</span>

@@ -4,8 +4,8 @@
 import { Post } from "@/lib/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Share2, ThumbsDown, ExternalLink } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added AvatarImage
+import { Heart, MessageCircle, Share2, ThumbsDown, ExternalLink, User as UserIcon } from "lucide-react"; // Added UserIcon
 import { formatDistanceToNow } from 'date-fns';
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import Image from "next/image"; 
@@ -36,11 +36,6 @@ export function PostCard({ post }: PostCardProps) {
   useEffect(() => {
     setLikes(post.likes);
     setDislikes(post.dislikes);
-    // Reset local liked/disliked state if post prop changes fundamentally,
-    // or if external likes/dislikes changed (e.g. from another user).
-    // For this demo, we'll assume local state is king for the current user's session.
-    // If a real-time system were in place, this might need more sophisticated logic
-    // to reconcile local state with server state.
   }, [post.likes, post.dislikes]);
 
 
@@ -84,16 +79,24 @@ export function PostCard({ post }: PostCardProps) {
     updatePostReactions(post.id, newLikesCount, newDislikesCount); 
   };
   
-  const pseudonymInitial = post.pseudonym.substring(0, 1).toUpperCase();
+  const displayName = post.userDisplayName || post.pseudonym;
+  const avatarInitial = displayName.substring(0, 1).toUpperCase();
+  const avatarImageSrc = post.userPhotoURL;
+
 
   return (
     <Card className="mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="flex flex-row items-center space-x-3 pb-3">
         <Avatar className="h-10 w-10">
-          <AvatarFallback className="bg-primary text-primary-foreground">{pseudonymInitial}</AvatarFallback>
+          {avatarImageSrc ? (
+            <AvatarImage src={avatarImageSrc} alt={displayName} />
+          ) : null}
+          <AvatarFallback className={avatarImageSrc ? '' : 'bg-primary text-primary-foreground'}>
+            {avatarInitial || <UserIcon />}
+          </AvatarFallback>
         </Avatar>
         <div>
-          <CardTitle className="text-lg font-semibold text-card-foreground">{post.pseudonym}</CardTitle>
+          <CardTitle className="text-lg font-semibold text-card-foreground">{displayName}</CardTitle>
           <div className="text-xs text-muted-foreground">
             Posted in <Link href={`/groups/${post.groupId}`} className="text-accent hover:underline">{post.groupName || post.groupId}</Link>
             {' \u00b7 '}
