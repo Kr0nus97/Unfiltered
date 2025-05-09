@@ -102,6 +102,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    /* bg-background and text-foreground are now applied conditionally in layout.tsx */
+    @apply font-sans; /* Apply base font; ensure tailwind.config.ts sets up font-sans to use --font-inter */
   }
 }

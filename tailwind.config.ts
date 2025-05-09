@@ -1,4 +1,6 @@
+
 import type { Config } from "tailwindcss";
+const defaultTheme = require('tailwindcss/defaultTheme'); // Import Tailwind's default theme
 
 export default {
     darkMode: ["class"],
@@ -9,6 +11,10 @@ export default {
   ],
   theme: {
   	extend: {
+      fontFamily: { // Add this section
+        sans: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
+        mono: ['var(--font-roboto-mono)', ...defaultTheme.fontFamily.mono],
+      },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
