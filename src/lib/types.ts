@@ -5,7 +5,6 @@ export interface Group {
   description: string;
   postCount?: number;
   memberCount?: number;
-  themeColor?: string; // e.g., a Tailwind color class or hex for group-specific theming
   backgroundImageUrl?: string; // URL for the group card background image
   creatorId?: string; // Firebase UID of the user who created the group
 }
@@ -32,10 +31,6 @@ export interface Post {
   userPhotoURL?: string; // Optional: Photo URL of the user
 }
 
-export type Adjective = typeof ADJECTIVES[number];
-export type Noun = typeof NOUNS[number];
-
-
 export const ADJECTIVES = [
   "Agile", "Ancient", "Arctic", "Awesome", "Brave", "Bright", "Bronze", "Calm", "Candid", "Clever", 
   "Cosmic", "Creative", "Curious", "Dapper", "Daring", "Dark", "Digital", "Dreamy", "Eager", 
@@ -55,6 +50,8 @@ export const ADJECTIVES = [
   "Venom", "Vexed", "Vibrant", "Virtual", "Void", "Voltaic", "Warm", "Water", "Wild", "Windy",
   "Wise", "Witty", "Wonder", "Wooden", "Xeno", "Yellow", "Young", "Zen", "Zero", "Zesty"
 ] as const;
+export type Adjective = typeof ADJECTIVES[number];
+
 
 export const NOUNS = [
   "Alpaca", "Anchor", "Ant", "Anvil", "Apple", "Arrow", "Asteroid", "Atom", "Aurora", "Automaton",
@@ -256,6 +253,4 @@ export const NOUNS = [
   "Yeti", "Yield", "Yodel", "Yoga", "Yogurt", "Yolk", "Youth", "Zebra", "Zenith", "Zephyr",
   "Zero", "Zeus", "Zigzag", "Zinc", "Zinnia", "Zip", "Zombie", "Zone", "Zoo", "Zoom"
 ] as const;
-
-
-
+export type Noun = typeof NOUNS[number];

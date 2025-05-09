@@ -17,54 +17,60 @@ export function GroupCard({ group }: GroupCardProps) {
   return (
     <Card className="relative overflow-hidden hover:shadow-xl transition-shadow duration-300 aspect-[4/3] flex flex-col">
       {hasBackgroundImage && (
-        <Image
-          src={group.backgroundImageUrl!}
-          alt={`${group.name} background`}
-          layout="fill"
-          objectFit="cover"
-          className="absolute inset-0 z-0"
-          data-ai-hint="group background"
-        />
+        <>
+          <Image
+            src={group.backgroundImageUrl!}
+            alt={`${group.name} background`}
+            layout="fill"
+            objectFit="cover"
+            className="absolute inset-0 z-0"
+            data-ai-hint="group background"
+          />
+          <div className="absolute inset-0 z-0 bg-black/60 dark:bg-black/70" />
+        </>
       )}
       
       <div className={cn(
-        "relative z-10 flex flex-col flex-grow p-0", 
-        hasBackgroundImage && "bg-black/60" 
+        "relative z-10 flex flex-col flex-grow p-0"
       )}>
-        <CardHeader className={cn("flex-grow", hasBackgroundImage && "text-white")}>
+        <CardHeader className={cn("flex-grow", hasBackgroundImage && "text-primary-foreground")}>
           <div className="flex items-center justify-between mb-2">
-            <CardTitle className={cn("text-xl line-clamp-2", hasBackgroundImage ? "text-white" : "text-primary")}>
+            <CardTitle className={cn(
+                "text-xl line-clamp-2", 
+                hasBackgroundImage ? "text-primary-foreground" : "text-primary"
+              )}
+            >
               {group.name}
             </CardTitle>
             {!hasBackgroundImage && (
-              group.themeColor ? (
-                <span className={`h-6 w-6 rounded-full ${group.themeColor}`} />
-              ) : (
                 <Users className="h-6 w-6 text-muted-foreground" />
-              )
             )}
           </div>
           <CardDescription className={cn(
-            "min-h-[40px] line-clamp-3 text-sm", // Ensure enough space for 3 lines
-            hasBackgroundImage ? "text-gray-200" : "text-muted-foreground"
+            "min-h-[40px] line-clamp-3 text-sm", 
+            hasBackgroundImage ? "text-primary-foreground/90" : "text-muted-foreground"
           )}>
             {group.description}
           </CardDescription>
-          <div className={cn("text-xs mt-2", hasBackgroundImage ? "text-gray-300" : "text-muted-foreground")}>
+          <div className={cn(
+              "text-xs mt-2", 
+              hasBackgroundImage ? "text-primary-foreground/70" : "text-muted-foreground"
+            )}
+          >
             {group.postCount !== undefined && <span>{group.postCount} posts</span>}
             {group.postCount !== undefined && group.memberCount !== undefined && <span className="mx-1">&middot;</span>}
             {group.memberCount !== undefined && <span>{group.memberCount} members</span>}
           </div>
         </CardHeader>
-        <div className={cn("p-4 pt-0 mt-auto", hasBackgroundImage ? "p-4" : "p-6 pt-0")}>
+        <div className={cn("p-4 pt-0 mt-auto")}>
           <Link href={`/groups/${group.id}`} passHref>
             <Button 
               variant={hasBackgroundImage ? "outline" : "default"} 
               className={cn(
                 "w-full", 
                 hasBackgroundImage 
-                  ? "border-white text-white hover:bg-white/10 hover:text-white" 
-                  : "border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                  ? "border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" 
+                  : "bg-accent text-accent-foreground hover:bg-accent/90" // Default variant already uses accent
               )}
             >
               View Group
