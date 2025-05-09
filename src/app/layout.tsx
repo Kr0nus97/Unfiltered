@@ -1,10 +1,9 @@
+
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
-import AppHeader from '@/components/core/AppHeader';
 import { AppProviders } from '@/components/core/AppProviders';
-import { ClientFooterYear } from '@/components/core/ClientFooterYear';
+import { AppShell } from '@/components/core/AppShell'; // New component for UI shell
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -28,16 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-background text-foreground`}>
         <AppProviders>
-          <AppHeader />
-          <main className="flex-grow container mx-auto px-4 py-8">
-            {children}
-          </main>
-          <Toaster />
-          <footer className="py-6 text-center text-muted-foreground text-sm border-t">
-            © <ClientFooterYear /> UnFiltered. All rights reserved (not really).
-          </footer>
+          <AppShell>{children}</AppShell>
         </AppProviders>
       </body>
     </html>
