@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Post, Group } from '@/lib/types';
+import type { Post, Group } from '@/lib/types';
 import { generatePseudonym } from '@/lib/pseudonyms';
 
 export const MOCK_GROUPS: Group[] = [
@@ -9,6 +9,8 @@ export const MOCK_GROUPS: Group[] = [
   { id: 'showerthoughts', name: 'Shower Thoughts', description: 'Those profound or silly thoughts you have in the shower.', postCount: 1023, memberCount: 12000, themeColor: 'bg-yellow-500' },
   { id: 'foodies', name: 'Food Lovers', description: 'Share recipes, restaurant reviews, and culinary adventures.', postCount: 340, memberCount: 4500, themeColor: 'bg-green-500' },
   { id: 'books', name: 'Bookworms Corner', description: 'Discuss your favorite books, authors, and genres.', postCount: 210, memberCount: 3200, themeColor: 'bg-indigo-500' },
+  { id: 'music', name: 'Music Hub', description: 'Share and discover new music, artists, and genres.', postCount: 180, memberCount: 2800, themeColor: 'bg-pink-500' },
+  { id: 'videos', name: 'Video Vibes', description: 'Interesting videos, short films, and discussions.', postCount: 95, memberCount: 1500, themeColor: 'bg-teal-500' },
 ];
 
 const MOCK_POSTS: Post[] = [
@@ -94,6 +96,42 @@ const MOCK_POSTS: Post[] = [
     dislikes: 1,
     commentsCount: 9,
   },
+  {
+    id: '8',
+    groupId: 'videos',
+    groupName: 'Video Vibes',
+    pseudonym: generatePseudonym(),
+    text: "Check out this incredible drone footage of the Northern Lights!",
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', // Example public MP4 video
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(), // 1 hour ago
+    likes: 88,
+    dislikes: 2,
+    commentsCount: 14,
+  },
+  {
+    id: '9',
+    groupId: 'music',
+    groupName: 'Music Hub',
+    pseudonym: generatePseudonym(),
+    text: "This new lofi track is perfect for studying. So chill.",
+    audioUrl: 'https://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg', // Example public OGG audio
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(), // 4 hours ago
+    likes: 55,
+    dislikes: 0,
+    commentsCount: 7,
+  },
+  {
+    id: '10',
+    groupId: 'gaming',
+    groupName: 'Game Central',
+    pseudonym: generatePseudonym(),
+    text: "Hilarious gaming moments compilation video I found.",
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // Another example video
+    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), // 90 mins ago
+    likes: 67,
+    dislikes: 3,
+    commentsCount: 11,
+  },
 ];
 
 interface PostsState {
@@ -108,8 +146,9 @@ interface PostsState {
 export const usePostsStore = create<PostsState>((set, get) => ({
   posts: MOCK_POSTS,
   groups: MOCK_GROUPS,
-  addPost: (post) => set((state) => ({ posts: [post, ...state.posts] })),
-  getPostsByGroupId: (groupId) => get().posts.filter(post => post.groupId === groupId),
+  addPost: (post) => set((state) => ({ posts: [post, ...state.posts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) })),
+  getPostsByGroupId: (groupId) => get().posts.filter(post => post.groupId === groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   getAllPosts: () => get().posts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   getGroupById: (groupId: string) => get().groups.find(group => group.id === groupId),
 }));
+

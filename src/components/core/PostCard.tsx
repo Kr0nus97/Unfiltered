@@ -4,10 +4,10 @@ import { Post } from "@/lib/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Share2, ThumbsDown, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { Heart, MessageCircle, Share2, ThumbsDown, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { MarkdownRenderer } from "./MarkdownRenderer";
-import Image from "next/image"; // Using next/image
+import Image from "next/image"; 
 import Link from "next/link";
 import React from "react";
 
@@ -59,7 +59,6 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
     <Card className="mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader className="flex flex-row items-center space-x-3 pb-3">
         <Avatar className="h-10 w-10">
-          {/* For a more unique avatar, we could hash the pseudonym to a color or use a generic icon */}
           <AvatarFallback className="bg-primary text-primary-foreground">{pseudonymInitial}</AvatarFallback>
         </Avatar>
         <div>
@@ -73,6 +72,7 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
       </CardHeader>
       <CardContent className="pb-4">
         {post.text && <MarkdownRenderer className="text-card-foreground">{post.text}</MarkdownRenderer>}
+        
         {post.imageUrl && (
           <div className="mt-3 rounded-lg overflow-hidden border">
             <Image
@@ -85,6 +85,23 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
             />
           </div>
         )}
+
+        {post.videoUrl && (
+          <div className="mt-3 rounded-lg overflow-hidden border aspect-video">
+            <video controls src={post.videoUrl} className="w-full h-full bg-black" data-ai-hint="social media video">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
+
+        {post.audioUrl && (
+          <div className="mt-3">
+            <audio controls src={post.audioUrl} className="w-full" data-ai-hint="social media audio">
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
+
         {post.linkUrl && (
           <div className="mt-3 p-3 border rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
             <a href={post.linkUrl} target="_blank" rel="noopener noreferrer" className="flex items-center text-accent hover:underline">
@@ -93,6 +110,7 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
             </a>
           </div>
         )}
+
         {post.isFlagged && (
           <div className="mt-3 p-2 border border-destructive/50 rounded-md bg-destructive/10 text-destructive text-xs">
             This post was flagged for: {post.flagReason || "Violating community guidelines."}

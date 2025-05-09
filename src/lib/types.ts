@@ -14,6 +14,8 @@ export interface Post {
   pseudonym: string;
   text?: string;
   imageUrl?: string;
+  videoUrl?: string;
+  audioUrl?: string;
   linkUrl?: string;
   linkTitle?: string;
   createdAt: string; // ISO string date
@@ -248,3 +250,4 @@ export const NOUNS = [
   "Yeti", "Yield", "Yodel", "Yoga", "Yogurt", "Yolk", "Youth", "Zebra", "Zenith", "Zephyr",
   "Zero", "Zeus", "Zigzag", "Zinc", "Zinnia", "Zip", "Zombie", "Zone", "Zoo", "Zoom"
 ] as const;
+

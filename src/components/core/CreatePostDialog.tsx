@@ -20,19 +20,21 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { moderateContent, type ModerateContentInput, type ModerateContentOutput } from "@/ai/flows/moderate-content";
-import { Group, Post } from "@/lib/types"; // Assuming these types exist
+import { Group, Post } from "@/lib/types"; 
 import { generatePseudonym } from "@/lib/pseudonyms";
-import { Globe, Image as ImageIcon, Link as LinkIcon, Loader2 } from "lucide-react";
-import { MOCK_GROUPS, usePostsStore } from "@/store/postsStore"; // We'll create this store
+import { Globe, Image as ImageIcon, Link as LinkIcon, Loader2, Video, Music } from "lucide-react";
+import { MOCK_GROUPS, usePostsStore } from "@/store/postsStore"; 
 
 const postFormSchema = z.object({
   groupId: z.string().min(1, "Please select a group"),
   text: z.string().optional(),
   imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  videoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  audioUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   linkUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-}).refine(data => data.text || data.imageUrl || data.linkUrl, {
-  message: "At least one field (text, image, or link) must be filled.",
-  path: ["text"], // You can point to any field or a general error
+}).refine(data => data.text || data.imageUrl || data.linkUrl || data.videoUrl || data.audioUrl, {
+  message: "At least one field (text, image, video, audio, or link) must be filled.",
+  path: ["text"], 
 });
 
 type PostFormValues = z.infer<typeof postFormSchema>;
@@ -46,7 +48,7 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
   const { toast } = useToast();
   const [isModerating, setIsModerating] = useState(false);
   const addPost = usePostsStore(state => state.addPost);
-  const groups = MOCK_GROUPS; // Use mock groups
+  const groups = MOCK_GROUPS; 
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postFormSchema),
@@ -54,6 +56,8 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
       groupId: "",
       text: "",
       imageUrl: "",
+      videoUrl: "",
+      audioUrl: "",
       linkUrl: "",
     },
   });
@@ -62,13 +66,13 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
     setIsModerating(true);
     try {
       const contentToModerate: ModerateContentInput = {
-        text: `${data.text || ''} ${data.imageUrl || ''} ${data.linkUrl || ''}`.trim(),
+        text: `${data.text || ''} ${data.imageUrl || ''} ${data.videoUrl || ''} ${data.audioUrl || ''} ${data.linkUrl || ''}`.trim(),
       };
 
       if (!contentToModerate.text) {
         toast({
           title: "Empty Post",
-          description: "Cannot submit an empty post.",
+          description: "Cannot submit an empty post. Please add some content.",
           variant: "destructive",
         });
         setIsModerating(false);
@@ -94,6 +98,8 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
         pseudonym: generatePseudonym(),
         text: data.text,
         imageUrl: data.imageUrl,
+        videoUrl: data.videoUrl,
+        audioUrl: data.audioUrl,
         linkUrl: data.linkUrl,
         createdAt: new Date().toISOString(),
         likes: 0,
@@ -101,7 +107,7 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
         commentsCount: 0,
       };
       
-      addPost(newPost); // Add to Zustand store
+      addPost(newPost); 
 
       toast({
         title: "Post Created!",
@@ -127,7 +133,7 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold">Create Anonymous Post</DialogTitle>
           <DialogDescription>
-            Share your thoughts, images, or links. Your identity remains anonymous.
+            Share your thoughts, images, videos, audio, or links. Your identity remains anonymous.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
@@ -162,7 +168,7 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
               id="text"
               placeholder="What's on your mind?"
               {...form.register("text")}
-              className="min-h-[120px] resize-y"
+              className="min-h-[100px] resize-y"
             />
           </div>
 
@@ -183,6 +189,38 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="videoUrl" className="text-sm font-medium">Video URL (Optional)</Label>
+             <div className="flex items-center space-x-2">
+              <Video className="h-5 w-5 text-muted-foreground" />
+              <Input
+                id="videoUrl"
+                type="url"
+                placeholder="https://example.com/video.mp4"
+                {...form.register("videoUrl")}
+              />
+            </div>
+            {form.formState.errors.videoUrl && (
+              <p className="text-xs text-destructive">{form.formState.errors.videoUrl.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="audioUrl" className="text-sm font-medium">Audio URL (Optional)</Label>
+             <div className="flex items-center space-x-2">
+              <Music className="h-5 w-5 text-muted-foreground" />
+              <Input
+                id="audioUrl"
+                type="url"
+                placeholder="https://example.com/audio.mp3"
+                {...form.register("audioUrl")}
+              />
+            </div>
+            {form.formState.errors.audioUrl && (
+              <p className="text-xs text-destructive">{form.formState.errors.audioUrl.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="linkUrl" className="text-sm font-medium">Link URL (Optional)</Label>
             <div className="flex items-center space-x-2">
               <LinkIcon className="h-5 w-5 text-muted-foreground" />
@@ -198,7 +236,7 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
             )}
           </div>
           
-          {form.formState.errors.text && !form.formState.errors.groupId && !form.formState.errors.imageUrl && !form.formState.errors.linkUrl && (
+          {form.formState.errors.text && !form.formState.errors.groupId && !form.formState.errors.imageUrl && !form.formState.errors.videoUrl && !form.formState.errors.audioUrl && !form.formState.errors.linkUrl && (
              <p className="text-sm text-destructive">{form.formState.errors.text.message}</p>
            )}
 
