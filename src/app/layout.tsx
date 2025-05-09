@@ -1,16 +1,16 @@
 
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { GeistSans as ImportedGeistSans, GeistMono as ImportedGeistMono } from 'next/font/google';
 import './globals.css';
 import { AppProviders } from '@/components/core/AppProviders';
 import { AppShell } from '@/components/core/AppShell';
 
-const geistSans = Geist({
+const geistSans = ImportedGeistSans({
   variable: '--font-geist-sans',
   subsets: ['latin'],
 });
 
-const geistMono = Geist_Mono({
+const geistMono = ImportedGeistMono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
 });
@@ -38,3 +38,4 @@ export default function RootLayout({
     </html>
   );
 }
+

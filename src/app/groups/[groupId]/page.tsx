@@ -10,29 +10,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-// CreatePostDialog is now rendered globally in RootLayout.
-// We need a way to trigger it. This typically involves context or a global state.
-// For now, we'll assume setIsCreatePostOpen is available via a hypothetical context or passed props.
-// This example won't fully work without that context.
-// A simple solution would be to pass the setCreatePostOpen function down through props,
-// or use a Zustand action to control the dialog's visibility.
-
-// For the purpose of this change, we'll remove the direct dialog invocation
-// and assume the button would call a global state setter.
-// Let's simulate this by making the button non-functional for opening the dialog
-// until a proper global state solution is in place.
-// OR, we can modify RootLayout to pass down the setter via a React Context.
-
-// Let's assume the parent RootLayout makes setIsCreatePostOpen available via a context
-// For now, the functionality of opening the dialog from here is deferred.
-// A proper solution would involve:
-// 1. Creating a React Context in RootLayout for isCreatePostOpen and setIsCreatePostOpen.
-// 2. Consuming that context here.
-
-// As a temporary workaround, we'll just make the button not open the dialog.
-// The global dialog will be opened by the bottom nav bar.
-// The user would then select the group in the dialog.
-// To make THIS button work, it'd need to set the global dialog state.
+// CreatePostDialog is now rendered globally in AppShell.
+// The buttons on this page currently cannot directly trigger the global dialog
+// without a more complex state management solution (like React Context or prop drilling).
+// The primary way to create a post is via the bottom navigation bar's "+" button.
 
 export default function GroupPage() {
   const params = useParams();
@@ -40,9 +21,6 @@ export default function GroupPage() {
 
   const getPostsByGroupId = usePostsStore(state => state.getPostsByGroupId);
   const getGroupById = usePostsStore(state => state.getGroupById);
-  // For now, we cannot directly call setIsCreatePostOpen from RootLayout here
-  // without a context or prop drilling. The button will be for UI purposes.
-  // const { setIsCreatePostOpen } = useSomeGlobalDialogContext(); // hypothetical
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [group, setGroup] = useState<Group | undefined>(undefined);
@@ -60,6 +38,8 @@ export default function GroupPage() {
   }, [groupId, getPostsByGroupId, getGroupById]);
 
   useEffect(() => {
+    // This effect ensures posts are re-fetched and re-sorted if the postsStore updates
+    // (e.g., after a new post is added via the global dialog)
     if (group) {
         setPosts(getPostsByGroupId(groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     }
@@ -100,12 +80,9 @@ export default function GroupPage() {
     notFound();
   }
 
-  const handleOpenCreatePostDialog = () => {
-    // This would ideally call a global function to open the dialog.
-    // For example: openGlobalCreatePostDialog({ defaultGroupId: group.id });
-    // For now, this button won't open the global dialog directly without context.
-    // The user can use the bottom navigation bar to open the post dialog.
-    alert("Use the '+' button in the bottom navigation bar to create a post. You can select this group from the dialog.");
+  const handleOpenCreatePostInfo = () => {
+    // Inform user how to create a post as this button cannot directly control global dialog
+    alert("To create a post, please use the '+' button in the bottom navigation bar. You can select this group from the dialog.");
   };
 
 
@@ -117,8 +94,7 @@ export default function GroupPage() {
             <h1 className="text-3xl font-bold text-primary mb-2">{group.name}</h1>
             <p className="text-muted-foreground mb-4">{group.description}</p>
           </div>
-          {/* This button's onClick needs to trigger the global dialog from RootLayout */}
-          <Button variant="outline" size="sm" onClick={handleOpenCreatePostDialog} className="ml-4 hidden md:inline-flex">
+          <Button variant="outline" size="sm" onClick={handleOpenCreatePostInfo} className="ml-4 hidden md:inline-flex">
             <Edit3 className="mr-2 h-4 w-4" /> Post to Group
           </Button>
         </div>
@@ -135,13 +111,12 @@ export default function GroupPage() {
         <div className="text-center py-10 bg-card rounded-lg shadow-md border">
           <h2 className="text-xl font-semibold text-muted-foreground">No posts in this group yet.</h2>
           <p className="text-muted-foreground mt-2">Why not be the first to share something?</p>
-          {/* This button's onClick also needs to trigger the global dialog */}
-          <Button onClick={handleOpenCreatePostDialog} className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground hidden md:inline-flex">
+          <Button onClick={handleOpenCreatePostInfo} className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground hidden md:inline-flex">
              Create Post
           </Button>
         </div>
       )}
-      {/* CreatePostDialog is no longer rendered here directly */}
     </div>
   );
 }
+

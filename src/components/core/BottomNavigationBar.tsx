@@ -77,3 +77,4 @@ export default function BottomNavigationBar({ setIsCreatePostOpen }: BottomNavig
     </nav>
   );
 }
+
