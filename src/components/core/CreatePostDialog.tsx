@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -32,7 +33,7 @@ const postFormSchema = z.object({
   videoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   audioUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   linkUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-}).refine(data => data.text || data.imageUrl || data.linkUrl || data.videoUrl || data.audioUrl, {
+}).refine(data => data.text || data.imageUrl || data.videoUrl || data.audioUrl || data.linkUrl, {
   message: "At least one field (text, image, video, audio, or link) must be filled.",
   path: ["text"], 
 });
@@ -42,9 +43,10 @@ type PostFormValues = z.infer<typeof postFormSchema>;
 interface CreatePostDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  defaultGroupId?: string;
 }
 
-export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps) {
+export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: CreatePostDialogProps) {
   const { toast } = useToast();
   const [isModerating, setIsModerating] = useState(false);
   const addPost = usePostsStore(state => state.addPost);
@@ -53,7 +55,7 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postFormSchema),
     defaultValues: {
-      groupId: "",
+      groupId: defaultGroupId || "",
       text: "",
       imageUrl: "",
       videoUrl: "",
@@ -61,6 +63,19 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
       linkUrl: "",
     },
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        groupId: defaultGroupId || "",
+        text: "",
+        imageUrl: "",
+        videoUrl: "",
+        audioUrl: "",
+        linkUrl: "",
+      });
+    }
+  }, [isOpen, defaultGroupId, form]);
 
   async function onSubmit(data: PostFormValues) {
     setIsModerating(true);
@@ -113,8 +128,8 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
         title: "Post Created!",
         description: "Your anonymous post has been published.",
       });
-      form.reset();
-      onOpenChange(false);
+      form.reset(); // Reset form fields to default (which will be cleared by useEffect on next open if no defaultGroupId)
+      onOpenChange(false); // This will trigger closeCreatePostDialog which clears defaultGroupId
     } catch (error) {
       console.error("Error creating post:", error);
       toast({
@@ -143,7 +158,11 @@ export function CreatePostDialog({ isOpen, onOpenChange }: CreatePostDialogProps
               control={form.control}
               name="groupId"
               render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value} // Use value from form state
+                  defaultValue={defaultGroupId} // DefaultValue for initial render if field.value is not set yet
+                >
                   <SelectTrigger id="groupId" aria-label="Select group">
                     <SelectValue placeholder="Select a group..." />
                   </SelectTrigger>

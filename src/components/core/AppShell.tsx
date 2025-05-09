@@ -6,12 +6,15 @@ import AppHeader from '@/components/core/AppHeader';
 import BottomNavigationBar from '@/components/core/BottomNavigationBar';
 import { CreatePostDialog } from '@/components/core/CreatePostDialog';
 import { Toaster } from '@/components/ui/toaster';
-// ThemeToggle is not part of the bottom navigation as per the image, 
-// but could be added to a "Me" page later.
-// import { ThemeToggle } from './ThemeToggle'; 
+import { useUiStore } from '@/store/uiStore';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [isCreatePostOpen, setIsCreatePostOpen] = React.useState(false);
+  const { 
+    isCreatePostDialogOpen, 
+    closeCreatePostDialog, 
+    defaultGroupIdForPostDialog,
+    openCreatePostDialog // For BottomNavigationBar
+  } = useUiStore();
 
   return (
     <>
@@ -19,10 +22,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="flex-grow container mx-auto px-4 py-8 pb-24"> {/* pb-24 ensures content isn't hidden by bottom nav */}
         {children}
       </main>
-      <BottomNavigationBar setIsCreatePostOpen={setIsCreatePostOpen} />
-      <CreatePostDialog isOpen={isCreatePostOpen} onOpenChange={setIsCreatePostOpen} />
+      <BottomNavigationBar openCreatePostDialog={openCreatePostDialog} />
+      <CreatePostDialog 
+        isOpen={isCreatePostDialogOpen} 
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            closeCreatePostDialog();
+          }
+          // If isOpen is true, it's likely handled by openCreatePostDialog already
+        }}
+        defaultGroupId={defaultGroupIdForPostDialog}
+      />
       <Toaster />
     </>
   );
 }
-

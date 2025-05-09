@@ -3,17 +3,14 @@
 
 import { PostCard } from "@/components/core/PostCard";
 import { usePostsStore } from "@/store/postsStore";
+import { useUiStore } from "@/store/uiStore"; // Import uiStore
 import type { Post, Group } from "@/lib/types";
-import { useParams, notFound, useRouter } from "next/navigation";
-import { useEffect, useState, useContext } from "react";
+import { useParams, notFound } from "next/navigation"; // Removed useRouter as it's not used
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-// CreatePostDialog is now rendered globally in AppShell.
-// The buttons on this page currently cannot directly trigger the global dialog
-// without a more complex state management solution (like React Context or prop drilling).
-// The primary way to create a post is via the bottom navigation bar's "+" button.
 
 export default function GroupPage() {
   const params = useParams();
@@ -21,6 +18,7 @@ export default function GroupPage() {
 
   const getPostsByGroupId = usePostsStore(state => state.getPostsByGroupId);
   const getGroupById = usePostsStore(state => state.getGroupById);
+  const openCreatePostDialog = useUiStore(state => state.openCreatePostDialog); // Get action from uiStore
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [group, setGroup] = useState<Group | undefined>(undefined);
@@ -39,7 +37,6 @@ export default function GroupPage() {
 
   useEffect(() => {
     // This effect ensures posts are re-fetched and re-sorted if the postsStore updates
-    // (e.g., after a new post is added via the global dialog)
     if (group) {
         setPosts(getPostsByGroupId(groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     }
@@ -80,11 +77,9 @@ export default function GroupPage() {
     notFound();
   }
 
-  const handleOpenCreatePostInfo = () => {
-    // Inform user how to create a post as this button cannot directly control global dialog
-    alert("To create a post, please use the '+' button in the bottom navigation bar. You can select this group from the dialog.");
+  const handleOpenCreatePostInGroup = () => {
+    openCreatePostDialog(group.id); // Open dialog with current group ID
   };
-
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -94,7 +89,7 @@ export default function GroupPage() {
             <h1 className="text-3xl font-bold text-primary mb-2">{group.name}</h1>
             <p className="text-muted-foreground mb-4">{group.description}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleOpenCreatePostInfo} className="ml-4 hidden md:inline-flex">
+          <Button variant="outline" size="sm" onClick={handleOpenCreatePostInGroup} className="ml-4 hidden md:inline-flex">
             <Edit3 className="mr-2 h-4 w-4" /> Post to Group
           </Button>
         </div>
@@ -102,6 +97,13 @@ export default function GroupPage() {
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to all groups
         </Link>
       </div>
+       {/* Button for mobile to post to this group */}
+       <div className="md:hidden mb-6">
+          <Button variant="default" size="lg" onClick={handleOpenCreatePostInGroup} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Edit3 className="mr-2 h-5 w-5" /> Post to {group.name}
+          </Button>
+        </div>
+
 
       {posts.length > 0 ? (
         posts.map((post) => (
@@ -111,12 +113,11 @@ export default function GroupPage() {
         <div className="text-center py-10 bg-card rounded-lg shadow-md border">
           <h2 className="text-xl font-semibold text-muted-foreground">No posts in this group yet.</h2>
           <p className="text-muted-foreground mt-2">Why not be the first to share something?</p>
-          <Button onClick={handleOpenCreatePostInfo} className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground hidden md:inline-flex">
-             Create Post
+          <Button onClick={handleOpenCreatePostInGroup} className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground hidden md:inline-flex">
+             Create First Post
           </Button>
         </div>
       )}
     </div>
   );
 }
-

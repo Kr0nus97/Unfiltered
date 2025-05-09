@@ -8,10 +8,10 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 interface BottomNavigationBarProps {
-  setIsCreatePostOpen: (isOpen: boolean) => void;
+  openCreatePostDialog: (defaultGroupId?: string) => void;
 }
 
-export default function BottomNavigationBar({ setIsCreatePostOpen }: BottomNavigationBarProps) {
+export default function BottomNavigationBar({ openCreatePostDialog }: BottomNavigationBarProps) {
   const pathname = usePathname();
 
   const navItems = [
@@ -48,7 +48,7 @@ export default function BottomNavigationBar({ setIsCreatePostOpen }: BottomNavig
         <Button
           variant="default"
           className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-16 h-16 shadow-lg transform -translate-y-5 flex flex-col items-center justify-center p-2"
-          onClick={() => setIsCreatePostOpen(true)}
+          onClick={() => openCreatePostDialog()} // Open dialog without specific group
           aria-label="Create Post"
         >
           <Plus className="h-6 w-6" />
@@ -77,4 +77,3 @@ export default function BottomNavigationBar({ setIsCreatePostOpen }: BottomNavig
     </nav>
   );
 }
-
