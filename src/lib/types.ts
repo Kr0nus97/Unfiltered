@@ -6,6 +6,8 @@ export interface Group {
   postCount?: number;
   memberCount?: number;
   themeColor?: string; // e.g., a Tailwind color class or hex for group-specific theming
+  backgroundImageUrl?: string; // URL for the group card background image
+  creatorId?: string; // Firebase UID of the user who created the group
 }
 
 export interface Post {
@@ -254,5 +256,6 @@ export const NOUNS = [
   "Yeti", "Yield", "Yodel", "Yoga", "Yogurt", "Yolk", "Youth", "Zebra", "Zenith", "Zephyr",
   "Zero", "Zeus", "Zigzag", "Zinc", "Zinnia", "Zip", "Zombie", "Zone", "Zoo", "Zoom"
 ] as const;
+
 
 

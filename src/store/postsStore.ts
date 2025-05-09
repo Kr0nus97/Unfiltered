@@ -4,14 +4,14 @@ import type { Post, Group } from '@/lib/types';
 import { generatePseudonym } from '@/lib/pseudonyms'; 
 
 export const MOCK_GROUPS: Group[] = [
-  { id: 'tech', name: 'Technology Talk', description: 'Discussions about the latest in tech, gadgets, and software.', postCount: 152, memberCount: 2300, themeColor: 'bg-blue-500' },
-  { id: 'politics', name: 'Political Arena', description: 'Debates and news regarding global and local politics.', postCount: 489, memberCount: 5100, themeColor: 'bg-red-500' },
-  { id: 'gaming', name: 'Game Central', description: 'Everything about video games, from retro to modern.', postCount: 765, memberCount: 8800, themeColor: 'bg-purple-500' },
-  { id: 'showerthoughts', name: 'Shower Thoughts', description: 'Those profound or silly thoughts you have in the shower.', postCount: 1023, memberCount: 12000, themeColor: 'bg-yellow-500' },
-  { id: 'foodies', name: 'Food Lovers', description: 'Share recipes, restaurant reviews, and culinary adventures.', postCount: 340, memberCount: 4500, themeColor: 'bg-green-500' },
-  { id: 'books', name: 'Bookworms Corner', description: 'Discuss your favorite books, authors, and genres.', postCount: 210, memberCount: 3200, themeColor: 'bg-indigo-500' },
-  { id: 'music', name: 'Music Hub', description: 'Share and discover new music, artists, and genres.', postCount: 180, memberCount: 2800, themeColor: 'bg-pink-500' },
-  { id: 'videos', name: 'Video Vibes', description: 'Interesting videos, short films, and discussions.', postCount: 95, memberCount: 1500, themeColor: 'bg-teal-500' },
+  { id: 'tech', name: 'Technology Talk', description: 'Discussions about the latest in tech, gadgets, and software.', postCount: 152, memberCount: 2300, themeColor: 'bg-blue-500', creatorId: 'system', backgroundImageUrl: 'https://picsum.photos/seed/tech/400/200' },
+  { id: 'politics', name: 'Political Arena', description: 'Debates and news regarding global and local politics.', postCount: 489, memberCount: 5100, themeColor: 'bg-red-500', creatorId: 'system' },
+  { id: 'gaming', name: 'Game Central', description: 'Everything about video games, from retro to modern.', postCount: 765, memberCount: 8800, themeColor: 'bg-purple-500', creatorId: 'system', backgroundImageUrl: 'https://picsum.photos/seed/gaminggroup/400/200' },
+  { id: 'showerthoughts', name: 'Shower Thoughts', description: 'Those profound or silly thoughts you have in the shower.', postCount: 1023, memberCount: 12000, themeColor: 'bg-yellow-500', creatorId: 'system' },
+  { id: 'foodies', name: 'Food Lovers', description: 'Share recipes, restaurant reviews, and culinary adventures.', postCount: 340, memberCount: 4500, themeColor: 'bg-green-500', creatorId: 'system', backgroundImageUrl: 'https://picsum.photos/seed/foodies/400/200' },
+  { id: 'books', name: 'Bookworms Corner', description: 'Discuss your favorite books, authors, and genres.', postCount: 210, memberCount: 3200, themeColor: 'bg-indigo-500', creatorId: 'system' },
+  { id: 'music', name: 'Music Hub', description: 'Share and discover new music, artists, and genres.', postCount: 180, memberCount: 2800, themeColor: 'bg-pink-500', creatorId: 'system' },
+  { id: 'videos', name: 'Video Vibes', description: 'Interesting videos, short films, and discussions.', postCount: 95, memberCount: 1500, themeColor: 'bg-teal-500', creatorId: 'system' },
 ];
 
 const BASE_DATE = new Date('2024-07-15T12:00:00.000Z');
@@ -145,6 +145,7 @@ interface PostsState {
   getAllPosts: () => Post[];
   getGroupById: (groupId: string) => Group | undefined;
   updatePostReactions: (postId: string, newLikes: number, newDislikes: number) => void;
+  addGroup: (group: Group) => void;
 }
 
 export const usePostsStore = create<PostsState>((set, get) => ({
@@ -166,5 +167,16 @@ export const usePostsStore = create<PostsState>((set, get) => ({
       p.id === postId ? { ...p, likes: newLikes, dislikes: newDislikes } : p
     ),
   })),
+  addGroup: (group) => {
+    const newGroupWithDefaults = {
+      ...group,
+      id: group.id || crypto.randomUUID(), // Ensure ID if not provided
+      postCount: group.postCount || 0,
+      memberCount: group.memberCount || 1, // Creator is the first member
+    };
+    set((state) => ({
+      groups: [newGroupWithDefaults, ...state.groups],
+    }));
+  },
 }));
 
