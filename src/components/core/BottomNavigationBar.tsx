@@ -17,49 +17,59 @@ export default function BottomNavigationBar({ setIsCreatePostOpen }: BottomNavig
   const navItems = [
     { href: "/", label: "FEED", icon: LayoutGrid },
     { href: "/groups", label: "GROUPS", icon: Users },
-    { href: "/me", label: "ME", icon: User }, // Placeholder link
-    { href: "/activity", label: "ACTIVITY", icon: Activity }, // Placeholder link
+    // The "POST" button is special and handled separately
+    { href: "/me", label: "ME", icon: User }, // Placeholder link, actual page to be implemented
+    { href: "/activity", label: "ACTIVITY", icon: Activity }, // Placeholder link, actual page to be implemented
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-border shadow-md md:hidden z-50">
       <div className="container mx-auto h-full flex items-center justify-around">
+        {/* First two items */}
         {navItems.slice(0, 2).map((item) => (
-          <Link key={item.label} href={item.href} passHref>
+          <Link key={item.label} href={item.href} passHref legacyBehavior>
             <Button
               variant="ghost"
+              asChild
               className={cn(
                 "flex flex-col items-center justify-center h-full px-3 text-xs font-medium",
-                pathname === item.href ? "text-primary" : "text-muted-foreground"
+                pathname === item.href ? "text-primary" : "text-muted-foreground hover:text-primary"
               )}
             >
-              <item.icon className="h-5 w-5 mb-0.5" />
-              {item.label}
+              <a>
+                <item.icon className="h-5 w-5 mb-0.5" />
+                {item.label}
+              </a>
             </Button>
           </Link>
         ))}
 
+        {/* Central Floating Action Button for POST */}
         <Button
           variant="default"
-          size="icon"
-          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-14 h-14 shadow-lg transform -translate-y-4"
+          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-16 h-16 shadow-lg transform -translate-y-5 flex flex-col items-center justify-center p-2"
           onClick={() => setIsCreatePostOpen(true)}
           aria-label="Create Post"
         >
-          <Plus className="h-7 w-7" />
+          <Plus className="h-6 w-6" />
+          <span className="mt-0.5 text-xs font-medium">POST</span>
         </Button>
 
+        {/* Last two items */}
         {navItems.slice(2).map((item) => (
-          <Link key={item.label} href={item.href} passHref>
+          <Link key={item.label} href={item.href} passHref legacyBehavior>
             <Button
               variant="ghost"
+              asChild
               className={cn(
                 "flex flex-col items-center justify-center h-full px-3 text-xs font-medium",
-                pathname === item.href ? "text-primary" : "text-muted-foreground"
+                pathname === item.href ? "text-primary" : "text-muted-foreground hover:text-primary"
               )}
             >
-              <item.icon className="h-5 w-5 mb-0.5" />
-              {item.label}
+              <a>
+                <item.icon className="h-5 w-5 mb-0.5" />
+                {item.label}
+              </a>
             </Button>
           </Link>
         ))}
