@@ -121,6 +121,12 @@ UnFiltered allows users to share opinions and content anonymously within interes
 ## Troubleshooting Authentication Errors
 If you encounter authentication errors (e.g., "Authentication Error: Failed to get authentication state." or issues with Google Sign-In popups):
 1.  **Double-check `.env.local`**: Ensure all `NEXT_PUBLIC_FIREBASE_` variables are correctly copied from your Firebase project settings.
+    *   **Specifically for "Firebase: Error (auth/api-key-not-valid)"**: This error means the `NEXT_PUBLIC_FIREBASE_API_KEY` in your `.env.local` file is either missing, incorrect, or not being loaded properly.
+        *   Go to your Firebase project settings > General tab.
+        *   Under "Your apps", select your web app.
+        *   Find the `apiKey` value in the `firebaseConfig` object.
+        *   Ensure this exact `apiKey` value is set for `NEXT_PUBLIC_FIREBASE_API_KEY` in your `.env.local` file.
+        *   Make sure you've restarted your Next.js development server (`npm run dev`) after creating or modifying the `.env.local` file, as Next.js only loads environment variables at build time or server start.
 2.  **Firebase Authentication Setup**:
     *   Verify that Google is enabled as a Sign-in provider in your Firebase project (Authentication -> Sign-in method).
     *   Confirm your project support email is set if required by Google provider.
