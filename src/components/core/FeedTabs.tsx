@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface FeedTabsProps {
   onTabChange?: (tabValue: string) => void;
-  children: React.ReactNode; // To render content below tabs
+  children: React.ReactNode; 
 }
 
 export function FeedTabs({ onTabChange, children }: FeedTabsProps) {

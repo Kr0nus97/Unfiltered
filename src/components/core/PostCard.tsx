@@ -71,8 +71,8 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
           <AvatarFallback className="bg-primary text-primary-foreground">{pseudonymInitial}</AvatarFallback>
         </Avatar>
         <div>
-          <CardTitle className="text-lg font-semibold">{post.pseudonym}</CardTitle>
-          <div className="text-xs text-muted-foreground"> {/* Changed p to div */}
+          <CardTitle className="text-lg font-semibold text-card-foreground">{post.pseudonym}</CardTitle>
+          <div className="text-xs text-muted-foreground">
             Posted in <Link href={`/groups/${post.groupId}`} className="text-accent hover:underline">{post.groupName || post.groupId}</Link>
             {' \u00b7 '}
             {timeAgo !== null ? timeAgo : <Skeleton className="h-3 w-20 inline-block" />}
@@ -147,4 +147,3 @@ export function PostCard({ post, onLike, onDislike }: PostCardProps) {
     </Card>
   );
 }
-

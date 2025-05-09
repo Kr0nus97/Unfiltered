@@ -18,8 +18,8 @@ export default function BottomNavigationBar({ openCreatePostDialog }: BottomNavi
     { href: "/", label: "FEED", icon: LayoutGrid },
     { href: "/groups", label: "GROUPS", icon: Users },
     // The "POST" button is special and handled separately
-    { href: "/me", label: "ME", icon: User }, // Placeholder link, actual page to be implemented
-    { href: "/activity", label: "ACTIVITY", icon: Activity }, // Placeholder link, actual page to be implemented
+    { href: "/me", label: "ME", icon: User }, 
+    { href: "/activity", label: "ACTIVITY", icon: Activity }, 
   ];
 
   return (
@@ -47,8 +47,8 @@ export default function BottomNavigationBar({ openCreatePostDialog }: BottomNavi
         {/* Central Floating Action Button for POST */}
         <Button
           variant="default"
-          className="bg-accent hover:bg-accent/90 text-accent-foreground rounded-full w-16 h-16 shadow-lg transform -translate-y-5 flex flex-col items-center justify-center p-2"
-          onClick={() => openCreatePostDialog()} // Open dialog without specific group
+          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg transform -translate-y-5 flex flex-col items-center justify-center p-2"
+          onClick={() => openCreatePostDialog()} 
           aria-label="Create Post"
         >
           <Plus className="h-6 w-6" />

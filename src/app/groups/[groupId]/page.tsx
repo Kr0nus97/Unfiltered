@@ -3,9 +3,9 @@
 
 import { PostCard } from "@/components/core/PostCard";
 import { usePostsStore } from "@/store/postsStore";
-import { useUiStore } from "@/store/uiStore"; // Import uiStore
+import { useUiStore } from "@/store/uiStore"; 
 import type { Post, Group } from "@/lib/types";
-import { useParams, notFound } from "next/navigation"; // Removed useRouter as it's not used
+import { useParams, notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ export default function GroupPage() {
 
   const getPostsByGroupId = usePostsStore(state => state.getPostsByGroupId);
   const getGroupById = usePostsStore(state => state.getGroupById);
-  const openCreatePostDialog = useUiStore(state => state.openCreatePostDialog); // Get action from uiStore
+  const openCreatePostDialog = useUiStore(state => state.openCreatePostDialog);
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [group, setGroup] = useState<Group | undefined>(undefined);
@@ -36,7 +36,6 @@ export default function GroupPage() {
   }, [groupId, getPostsByGroupId, getGroupById]);
 
   useEffect(() => {
-    // This effect ensures posts are re-fetched and re-sorted if the postsStore updates
     if (group) {
         setPosts(getPostsByGroupId(groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     }
@@ -78,7 +77,7 @@ export default function GroupPage() {
   }
 
   const handleOpenCreatePostInGroup = () => {
-    openCreatePostDialog(group.id); // Open dialog with current group ID
+    openCreatePostDialog(group.id); 
   };
 
   return (
@@ -89,7 +88,7 @@ export default function GroupPage() {
             <h1 className="text-3xl font-bold text-primary mb-2">{group.name}</h1>
             <p className="text-muted-foreground mb-4">{group.description}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleOpenCreatePostInGroup} className="ml-4 hidden md:inline-flex">
+          <Button variant="outline" size="sm" onClick={handleOpenCreatePostInGroup} className="ml-4 hidden md:inline-flex border-accent text-accent hover:bg-accent hover:text-accent-foreground">
             <Edit3 className="mr-2 h-4 w-4" /> Post to Group
           </Button>
         </div>
@@ -97,7 +96,6 @@ export default function GroupPage() {
           <ArrowLeft className="mr-1 h-4 w-4" /> Back to all groups
         </Link>
       </div>
-       {/* Button for mobile to post to this group */}
        <div className="md:hidden mb-6">
           <Button variant="default" size="lg" onClick={handleOpenCreatePostInGroup} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
             <Edit3 className="mr-2 h-5 w-5" /> Post to {group.name}

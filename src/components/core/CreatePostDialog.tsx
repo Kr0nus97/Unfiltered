@@ -128,8 +128,8 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         title: "Post Created!",
         description: "Your anonymous post has been published.",
       });
-      form.reset(); // Reset form fields to default (which will be cleared by useEffect on next open if no defaultGroupId)
-      onOpenChange(false); // This will trigger closeCreatePostDialog which clears defaultGroupId
+      form.reset(); 
+      onOpenChange(false); 
     } catch (error) {
       console.error("Error creating post:", error);
       toast({
@@ -160,8 +160,8 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
               render={({ field }) => (
                 <Select 
                   onValueChange={field.onChange} 
-                  value={field.value} // Use value from form state
-                  defaultValue={defaultGroupId} // DefaultValue for initial render if field.value is not set yet
+                  value={field.value} 
+                  defaultValue={defaultGroupId} 
                 >
                   <SelectTrigger id="groupId" aria-label="Select group">
                     <SelectValue placeholder="Select a group..." />
@@ -266,7 +266,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={isModerating} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button type="submit" disabled={isModerating} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               {isModerating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -4,23 +4,23 @@
 
 @layer base {
   :root {
-    --background: 220 30% 96%; /* Light cool gray page background */
-    --foreground: 234 15% 25%; /* Dark desaturated blue text */
+    --background: 220 10% 98%; /* Very light gray, almost white from image */
+    --foreground: 220 10% 25%; /* Dark gray text from image */
 
-    --card: 0 0% 100%; /* White card background */
-    --card-foreground: 234 15% 25%; /* Dark desaturated blue text on cards */
+    --card: 0 0% 100%; /* White card background from image */
+    --card-foreground: 220 10% 25%; /* Dark gray text on cards */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 234 15% 25%;
+    --popover-foreground: 220 10% 25%;
 
-    --primary: 234 62% 30%; /* Deep blue */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 255 70% 65%; /* Light Purple from image */
+    --primary-foreground: 0 0% 100%; /* White text on light purple */
 
-    --secondary: 234 30% 90%; /* Lighter blue/gray for secondary elements */
-    --secondary-foreground: 234 62% 30%; /* Deep blue text on light secondary */
+    --secondary: 220 10% 92%; /* Lighter gray for secondary elements */
+    --secondary-foreground: 255 70% 65%; /* Purple text on light secondary */
 
-    --muted: 234 20% 85%; /* Muted grays/blues */
-    --muted-foreground: 234 15% 45%; /* Slightly lighter text for muted */
+    --muted: 220 10% 88%; /* Muted grays */
+    --muted-foreground: 220 10% 45%; /* Slightly lighter text for muted */
 
     --accent: 174 60% 40%; /* Teal */
     --accent-foreground: 0 0% 100%; /* White */
@@ -28,9 +28,9 @@
     --destructive: 0 84.2% 60.2%; /* Default destructive red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 234 20% 80%; /* Borders slightly darker than muted */
-    --input: 234 20% 90%; /* Input background */
-    --ring: 174 60% 40%; /* Teal for focus rings */
+    --border: 220 10% 85%; /* Borders slightly darker than muted */
+    --input: 220 10% 94%; /* Input background */
+    --ring: 255 70% 65%; /* Purple for focus rings */
     
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -40,44 +40,44 @@
     --radius: 0.5rem;
 
     /* Sidebar variables themed for consistency */
-    --sidebar-background: 220 30% 98%;
-    --sidebar-foreground: 234 15% 25%;
-    --sidebar-primary: 234 62% 30%;
+    --sidebar-background: 220 10% 97%;
+    --sidebar-foreground: 220 10% 25%;
+    --sidebar-primary: 255 70% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 30% 92%;
-    --sidebar-accent-foreground: 234 15% 25%;
-    --sidebar-border: 220 30% 88%;
-    --sidebar-ring: 174 60% 40%;
+    --sidebar-accent: 220 10% 90%;
+    --sidebar-accent-foreground: 220 10% 25%;
+    --sidebar-border: 220 10% 80%;
+    --sidebar-ring: 255 70% 65%;
   }
 
   .dark {
-    --background: 234 15% 15%; /* Dark blue-gray page background */
-    --foreground: 220 30% 90%; /* Light gray text */
+    --background: 220 10% 10%; /* Dark gray page background */
+    --foreground: 220 10% 90%; /* Light gray text */
 
-    --card: 234 15% 20%; /* Darker blue-gray card background */
-    --card-foreground: 220 30% 90%; /* Light gray text on cards */
+    --card: 220 10% 15%; /* Darker gray card background */
+    --card-foreground: 220 10% 90%; /* Light gray text on cards */
 
-    --popover: 234 15% 10%;
-    --popover-foreground: 220 30% 90%;
+    --popover: 220 10% 5%;
+    --popover-foreground: 220 10% 90%;
 
-    --primary: 174 60% 50%; /* Brighter Teal for dark mode primary */
-    --primary-foreground: 234 15% 10%; /* Dark text on teal */
+    --primary: 255 70% 70%; /* Brighter Purple for dark mode primary */
+    --primary-foreground: 0 0% 100%; /* White text on purple */
 
-    --secondary: 234 15% 25%; /* Darker secondary elements */
-    --secondary-foreground: 220 30% 85%; /* Lighter text on dark secondary */
+    --secondary: 220 10% 20%; /* Darker secondary elements */
+    --secondary-foreground: 220 10% 85%; /* Lighter text on dark secondary */
 
-    --muted: 234 15% 30%;
-    --muted-foreground: 220 20% 65%;
+    --muted: 220 10% 25%;
+    --muted-foreground: 220 10% 65%;
 
-    --accent: 234 62% 55%; /* Brighter Deep Blue for dark mode accent */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent: 174 60% 50%; /* Brighter Teal for dark mode accent */
+    --accent-foreground: 220 10% 10%; /* Dark text on teal */
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 234 15% 35%;
-    --input: 234 15% 25%;
-    --ring: 174 60% 50%;
+    --border: 220 10% 30%;
+    --input: 220 10% 20%;
+    --ring: 255 70% 70%; /* Purple for focus rings */
 
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -86,14 +86,14 @@
     --chart-5: 340 75% 55%;
     
     /* Dark Sidebar variables themed for consistency */
-    --sidebar-background: 234 15% 18%;
-    --sidebar-foreground: 220 30% 88%;
-    --sidebar-primary: 174 60% 50%;
+    --sidebar-background: 220 10% 12%;
+    --sidebar-foreground: 220 10% 88%;
+    --sidebar-primary: 255 70% 70%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 234 15% 22%;
-    --sidebar-accent-foreground: 220 30% 88%;
-    --sidebar-border: 234 15% 30%;
-    --sidebar-ring: 174 60% 50%;
+    --sidebar-accent: 220 10% 18%;
+    --sidebar-accent-foreground: 220 10% 88%;
+    --sidebar-border: 220 10% 25%;
+    --sidebar-ring: 255 70% 70%;
   }
 }
 
