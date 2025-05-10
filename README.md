@@ -48,8 +48,8 @@ UnFiltered allows users to share opinions and content anonymously within interes
     *   Enable **Google** as a sign-in provider. You might need to provide a project support email.
 
 2.  **Configure Environment Variables:**
-    *   Rename the `.env` file in the root of the project to `.env.local`.
-    *   Open `.env.local` and fill in your Firebase project's configuration values:
+    *   Rename the `.env` file (if it exists) or create a new file named `.env.local` in the root of your project.
+    *   Open `.env.local` and fill in your Firebase project's configuration values. **Replace `YOUR_...` placeholders with your actual Firebase project credentials.**
         ```env
         NEXT_PUBLIC_FIREBASE_API_KEY="YOUR_API_KEY"
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="YOUR_AUTH_DOMAIN"
@@ -57,9 +57,24 @@ UnFiltered allows users to share opinions and content anonymously within interes
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="YOUR_STORAGE_BUCKET"
         NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="YOUR_MESSAGING_SENDER_ID"
         NEXT_PUBLIC_FIREBASE_APP_ID="YOUR_APP_ID"
-        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="YOUR_MEASUREMENT_ID" # Optional
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="YOUR_MEASUREMENT_ID" # Optional, leave blank if not used
         ```
-    *   **Important for Google Sign-In:** In your Firebase project console, go to **Authentication** -> **Settings** -> **Authorized domains**. Ensure that `localhost` is listed (it usually is by default for development). If you deploy your app, you'll need to add your production domain here.
+    *   **Example using the values you provided:**
+        ```env
+        NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSyAzJ6w_mc3SnuZS9krfOefs0vBTIbYNMWA"
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="unfiltered-laoar.firebaseapp.com"
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID="unfiltered-laoar"
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="unfiltered-laoar.firebasestorage.app"
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="431771945516"
+        NEXT_PUBLIC_FIREBASE_APP_ID="1:431771945516:web:78e8a290fc03b094261f89"
+        NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=""
+        ```
+    *   **Important for Google Sign-In & "Invalid Domain" errors:**
+        *   In your Firebase project console, go to **Authentication** -> **Settings** (tab) -> **Authorized domains**.
+        *   Ensure that `localhost` is listed (it usually is by default for development).
+        *   If you are running on a different port than the default (e.g. `localhost:9002`), ensure that domain is also listed.
+        *   If deploying your app, you'll need to add your production domain here (e.g., `your-app-name.vercel.app` or `www.yourdomain.com`).
+        *   The `authDomain` you set in `.env.local` (e.g., `unfiltered-laoar.firebaseapp.com`) should also inherently be authorized, but explicitly check the "Authorized domains" list.
 
 3.  **Install dependencies:**
     ```bash
@@ -119,19 +134,44 @@ UnFiltered allows users to share opinions and content anonymously within interes
 -   **Responsive Design**: UI adapts to mobile and desktop, including bottom navigation for mobile.
 
 ## Troubleshooting Authentication Errors
-If you encounter authentication errors (e.g., "Authentication Error: Failed to get authentication state." or issues with Google Sign-In popups):
-1.  **Double-check `.env.local`**: Ensure all `NEXT_PUBLIC_FIREBASE_` variables are correctly copied from your Firebase project settings.
-    *   **Specifically for "Firebase: Error (auth/api-key-not-valid)"**: This error means the `NEXT_PUBLIC_FIREBASE_API_KEY` in your `.env.local` file is either missing, incorrect, or not being loaded properly.
+If you encounter authentication errors (e.g., "Authentication Error: Failed to get authentication state.", issues with Google Sign-In popups, or **"Invalid Domain"** errors):
+
+1.  **Verify `.env.local` Configuration**:
+    *   Ensure all `NEXT_PUBLIC_FIREBASE_` variables are correctly copied from your Firebase project settings into the `.env.local` file at the root of your project.
+    *   **Crucial**: After creating or modifying `.env.local`, **you MUST restart your Next.js development server** (`npm run dev`). Next.js only loads these variables at build time or server start.
+    *   **Specifically for "Firebase: Error (auth/api-key-not-valid)"**: This means the `NEXT_PUBLIC_FIREBASE_API_KEY` in your `.env.local` file is either missing, incorrect, or not being loaded properly.
         *   Go to your Firebase project settings > General tab.
         *   Under "Your apps", select your web app.
         *   Find the `apiKey` value in the `firebaseConfig` object.
         *   Ensure this exact `apiKey` value is set for `NEXT_PUBLIC_FIREBASE_API_KEY` in your `.env.local` file.
-        *   Make sure you've restarted your Next.js development server (`npm run dev`) after creating or modifying the `.env.local` file, as Next.js only loads environment variables at build time or server start.
+
 2.  **Firebase Authentication Setup**:
-    *   Verify that Google is enabled as a Sign-in provider in your Firebase project (Authentication -> Sign-in method).
-    *   Confirm your project support email is set if required by Google provider.
-3.  **Authorized Domains**: In Firebase console (Authentication -> Settings -> Authorized domains), make sure `localhost` is listed for development. If deploying, add your deployed domain.
-4.  **API Key Restrictions**: If you have restricted your Firebase API key (Google Cloud Console -> APIs & Services -> Credentials), ensure it allows access from your web app's domain (and `localhost` for development) and has the necessary Firebase service permissions (e.g., Identity Toolkit API for authentication). For initial setup, it's often easier to leave the API key unrestricted and tighten security later.
-5.  **Browser Pop-up Blockers**: Ensure your browser is not blocking the Google Sign-In pop-up.
-6.  **Console Errors**: Check your browser's developer console for more specific error messages from Firebase.
+    *   In the Firebase console, go to **Authentication** -> **Sign-in method** tab.
+    *   Confirm that **Google** is **ENABLED** as a sign-in provider.
+    *   Ensure your project support email is set if required by the Google provider.
+
+3.  **Authorized Domains (VERY IMPORTANT for "Invalid Domain" errors)**:
+    *   In the Firebase console, go to **Authentication** -> **Settings** (tab).
+    *   Under the **Authorized domains** section, click "Add domain".
+    *   **For local development**:
+        *   Add `localhost`. (This is often added by default, but verify).
+        *   If your app runs on a specific port locally (like `http://localhost:9002` which is the default for this project), `localhost` usually covers this. Some older Firebase setups might have required the port, but typically just `localhost` is sufficient.
+    *   **For deployed applications**: Add the domain where your application is hosted (e.g., `your-app-name.vercel.app`, `www.yourdomain.com`).
+    *   The `authDomain` (e.g., `unfiltered-laoar.firebaseapp.com` from your config) is automatically authorized, but issues can arise if the calling domain (where your Next.js app is running) isn't explicitly in this list.
+
+4.  **API Key Restrictions (Advanced)**:
+    *   If you have restricted your Firebase API key in the Google Cloud Console (APIs & Services -> Credentials):
+        *   Ensure it allows access from your web app's domain (and `localhost` for development).
+        *   Verify it has the necessary Firebase service permissions (e.g., "Identity Toolkit API" for authentication).
+        *   For initial setup and troubleshooting, it's often easier to temporarily remove restrictions on the API key and then re-apply them one by one to identify the issue.
+
+5.  **Browser Pop-up Blockers**: Ensure your browser is not blocking the Google Sign-In pop-up window. Try disabling pop-up blockers for your development site.
+
+6.  **Third-Party Cookies**: Some browsers or extensions might block third-party cookies, which can interfere with Google Sign-In. Try allowing third-party cookies for `google.com` and your `authDomain`.
+
+7.  **Console Errors**: Open your browser's developer console (usually F12). Look for more specific error messages from Firebase or your application. These can provide more clues.
+
+8.  **Firebase Project Region/Location**: Ensure your Firebase project's region settings (if applicable, e.g., for Firestore/Functions) are compatible and there are no regional restrictions affecting authentication.
+
+By systematically checking these points, especially the **Authorized Domains** in Firebase, you should be able to resolve the "invalid domain" error and other common authentication issues.
 ```
