@@ -7,12 +7,12 @@ import { usePostsStore } from "@/store/postsStore";
 import type { ActivityItem as ActivityItemType } from "@/lib/types";
 import { ActivityItemCard } from "@/components/core/ActivityItemCard";
 import { Button } from "@/components/ui/button";
-import { Loader2, LogIn, ListChecks, BellOff } from "lucide-react";
+import { Loader2, LogIn, ListChecks, BellOff, Users } from "lucide-react"; // Added Users icon
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function ActivityPage() {
-  const { user, loading: authLoading, signInWithGoogle } = useAuth();
+  const { user, isGuestMode, loading: authLoading, signInWithGoogle } = useAuth();
   const getUserActivities = usePostsStore(state => state.getUserActivities);
   const markAllActivitiesAsRead = usePostsStore(state => state.markAllActivitiesAsRead);
   const markActivityAsRead = usePostsStore(state => state.markActivityAsRead);
@@ -25,33 +25,32 @@ export default function ActivityPage() {
       setIsLoadingActivities(true);
       return;
     }
-    if (user) {
+    if (user && !isGuestMode) { // Only fetch activities for logged-in (non-guest) users
       setIsLoadingActivities(true);
-      // Simulate fetching or allow zustand to update
       const userActivities = getUserActivities(user.uid);
       setActivities(userActivities);
       setIsLoadingActivities(false);
-    } else {
+    } else { // Guests or non-logged-in users have no activities
       setActivities([]);
       setIsLoadingActivities(false);
     }
-  }, [user, authLoading, getUserActivities, usePostsStore(state => state.activityFeed) /* Listen to full feed for updates */ ]);
+  }, [user, isGuestMode, authLoading, getUserActivities, usePostsStore(state => state.activityFeed)]);
 
   const handleMarkAllRead = () => {
-    if (user) {
+    if (user && !isGuestMode) {
       markAllActivitiesAsRead(user.uid);
     }
   };
 
   const handleMarkOneRead = (activityId: string) => {
-    if (user) {
+    if (user && !isGuestMode) {
       markActivityAsRead(user.uid, activityId);
     }
   };
   
   const unreadCount = activities.filter(a => !a.isRead).length;
 
-  if (authLoading || (user && isLoadingActivities)) {
+  if (authLoading || (user && !isGuestMode && isLoadingActivities)) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="flex justify-between items-center mb-6">
@@ -67,7 +66,25 @@ export default function ActivityPage() {
     );
   }
 
-  if (!user) {
+  if (!user && isGuestMode) { // Guest mode
+    return (
+      <div className="container mx-auto py-8 px-4 text-center">
+        <h1 className="text-3xl font-bold text-primary mb-6">Activity Feed</h1>
+        <Alert className="max-w-md mx-auto bg-card border-border shadow-md">
+            <Users className="h-5 w-5 text-accent" />
+            <AlertTitle className="text-foreground">Guest Mode</AlertTitle>
+            <AlertDescription className="text-muted-foreground mb-4">
+            You are browsing as a guest. Sign in with Google to view your activity and notifications.
+            </AlertDescription>
+            <Button onClick={signInWithGoogle} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
+                <LogIn className="mr-2 h-4 w-4" /> Sign in with Google
+            </Button>
+        </Alert>
+      </div>
+    );
+  }
+  
+  if (!user && !isGuestMode) { // Not logged in, not guest
     return (
       <div className="container mx-auto py-8 px-4 text-center">
         <h1 className="text-3xl font-bold text-primary mb-6">Activity Feed</h1>
@@ -85,6 +102,7 @@ export default function ActivityPage() {
     );
   }
   
+  // User is logged in and not a guest
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b">
@@ -118,3 +136,4 @@ export default function ActivityPage() {
     </div>
   );
 }
+

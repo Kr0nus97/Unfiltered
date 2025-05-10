@@ -23,10 +23,12 @@ import { useToast } from "@/hooks/use-toast";
 import { moderateContent, type ModerateContentInput, type ModerateContentOutput } from "@/ai/flows/moderate-content";
 import type { Group, Post, ActivityType } from "@/lib/types"; 
 import { generatePseudonym } from "@/lib/pseudonyms";
-import { Globe, Image as ImageIcon, Link as LinkIcon, Loader2, Video, Music, LogIn } from "lucide-react";
+import { Globe, Image as ImageIcon, Link as LinkIcon, Loader2, Video, Music, LogIn, UserCheck, AlertCircle } from "lucide-react"; // Added UserCheck, AlertCircle
 import { usePostsStore } from "@/store/postsStore"; 
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+
 
 const postFormSchema = z.object({
   groupId: z.string().min(1, "Please select a group"),
@@ -50,11 +52,11 @@ interface CreatePostDialogProps {
 
 export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: CreatePostDialogProps) {
   const { toast } = useToast();
-  const [isModerating, setIsModerating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Renamed from isModerating for clarity
   const addPost = usePostsStore(state => state.addPost);
   const groups = usePostsStore(state => state.groups); 
   const addActivityItem = usePostsStore(state => state.addActivityItem);
-  const { user, loading: authLoading, signInWithGoogle } = useAuth();
+  const { user, isGuestMode, loading: authLoading, signInWithGoogle } = useAuth();
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postFormSchema),
@@ -82,14 +84,17 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
   }, [isOpen, defaultGroupId, form, groups]);
   
   useEffect(() => {
-    if (user && isOpen && !form.getValues("groupId") && (defaultGroupId || (groups.length > 0 && !defaultGroupId))) {
+    // Only set default groupId if user is logged in (not guest) or if it's explicitly passed
+    if (user && !isGuestMode && isOpen && !form.getValues("groupId") && (defaultGroupId || (groups.length > 0 && !defaultGroupId))) {
         form.setValue("groupId", defaultGroupId || groups[0].id);
+    } else if (isOpen && defaultGroupId && !form.getValues("groupId")) { // Allow defaultGroupId even for guests initially if provided
+        form.setValue("groupId", defaultGroupId);
     }
-  }, [user, isOpen, defaultGroupId, form, groups]);
+  }, [user, isGuestMode, isOpen, defaultGroupId, form, groups]);
 
 
   async function onSubmit(data: PostFormValues) {
-    if (!user) {
+    if (!user) { // This covers guests as well, since user is null for guests
       toast({
         title: "Authentication Required",
         description: "Please sign in to create a post.",
@@ -98,7 +103,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
       return;
     }
 
-    setIsModerating(true);
+    setIsSubmitting(true);
     try {
       const contentToModerate: ModerateContentInput = {
         text: `${data.text || ''} ${data.imageUrl || ''} ${data.videoUrl || ''} ${data.audioUrl || ''} ${data.linkUrl || ''}`.trim(),
@@ -110,7 +115,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
           description: "Cannot submit an empty post. Please add some content.",
           variant: "destructive",
         });
-        setIsModerating(false);
+        setIsSubmitting(false);
         return;
       }
       
@@ -134,7 +139,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
             flagReason: moderationResult.flagReason || "Violating community guidelines",
           },
         });
-        setIsModerating(false);
+        setIsSubmitting(false);
         return;
       }
 
@@ -184,7 +189,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         variant: "destructive",
       });
     } finally {
-      setIsModerating(false);
+      setIsSubmitting(false);
     }
   }
 
@@ -198,7 +203,36 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
       );
     }
 
-    if (!user) {
+    if (!user && isGuestMode) { // Guest mode
+      return (
+        <div className="py-6 text-center">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold">Guest Mode Notice</DialogTitle>
+          </DialogHeader>
+            <Alert variant="default" className="my-4 text-left bg-secondary/30">
+              <UserCheck className="h-5 w-5 text-accent" />
+              <AlertTitle className="font-semibold">Sign In to Post</AlertTitle>
+              <AlertDescription>
+                You are currently browsing as a guest. To create a post and contribute to the UnFiltered community, please sign in with your Google account. This helps us maintain a safe and accountable environment.
+              </AlertDescription>
+            </Alert>
+          <Button onClick={() => { onOpenChange(false); signInWithGoogle(); }} className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90 w-full">
+            <LogIn className="mr-2 h-4 w-4" />
+            Sign in with Google
+          </Button>
+          <DialogFooter className="sm:justify-center mt-6">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" className="w-full">
+                Cancel
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </div>
+      );
+    }
+
+
+    if (!user && !isGuestMode) { // Not signed in, not guest
       return (
         <div className="py-10 text-center">
           <DialogHeader>
@@ -221,7 +255,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         </div>
       );
     }
-
+    // User is signed in (not a guest)
     return (
       <>
         <DialogHeader>
@@ -246,6 +280,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
                     <SelectValue placeholder="Select a group..." />
                   </SelectTrigger>
                   <SelectContent>
+                    {groups.length === 0 && <SelectItem value="" disabled>No groups available</SelectItem>}
                     {groups.map((group) => (
                       <SelectItem key={group.id} value={group.id}>
                         {group.name}
@@ -344,11 +379,11 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={isModerating} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              {isModerating ? (
+            <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Moderating...
+                  Submitting...
                 </>
               ) : (
                 "Post Anonymously"
@@ -368,3 +403,4 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
     </Dialog>
   );
 }
+

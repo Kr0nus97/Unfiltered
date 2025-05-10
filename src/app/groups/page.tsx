@@ -15,18 +15,18 @@ import { useAuth } from "@/context/AuthContext";
 export default function GroupsPage() {
   const allGroups = usePostsStore(state => state.groups);
   const openCreateGroupDialog = useUiStore(state => state.openCreateGroupDialog);
-  const { user, loading: authLoading } = useAuth();
+  const { user, isGuestMode, loading: authLoading } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Consider auth loading as well
     if (allGroups.length > 0 && !authLoading) {
       setIsLoading(false);
     } else if (!authLoading && allGroups.length === 0) {
-      setIsLoading(false); // No groups, but auth is done
+      setIsLoading(false); 
     }
+    // Keep loading if auth is still loading and groups might not be fully representative
   }, [allGroups, authLoading]);
 
   const filteredGroups = useMemo(() => {
@@ -67,10 +67,10 @@ export default function GroupsPage() {
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-primary mb-4 sm:mb-0">Discover Groups</h1>
-        {/* Create Group button is not disabled by authLoading, dialog handles auth */}
         <Button 
           onClick={openCreateGroupDialog} 
           className="bg-accent text-accent-foreground hover:bg-accent/90 w-full sm:w-auto"
+          // Button is not disabled here; dialog will handle auth/guest check
         >
           <PlusCircle className="mr-2 h-5 w-5" /> Create New Group
         </Button>
@@ -98,9 +98,20 @@ export default function GroupsPage() {
           </h2>
           <p className="text-muted-foreground mt-2">
             {searchTerm ? "Try a different search term or " : ""}
-            Why not create the first one?
+            {!user || isGuestMode ? "Sign in to create a group." : "Why not create the first one?"}
           </p>
-          {!searchTerm && (
+          {(!user || isGuestMode) && !searchTerm && (
+             <Button 
+              onClick={() => { 
+                if (isGuestMode) openCreateGroupDialog(); // Will show guest prompt in dialog
+                else signInWithGoogle(); // If not guest and not user, means needs to sign in
+              }} 
+              className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground"
+             >
+              <LogIn className="mr-2 h-5 w-5" /> Sign In to Create a Group
+            </Button>
+          )}
+           {(user && !isGuestMode) && !searchTerm && (
              <Button 
               onClick={openCreateGroupDialog} 
               className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground"
@@ -113,3 +124,4 @@ export default function GroupsPage() {
     </div>
   );
 }
+

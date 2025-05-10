@@ -13,7 +13,9 @@ import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePostsStore } from "@/store/postsStore";
-import { useAuth } from "@/context/AuthContext"; // Import useAuth
+import { useAuth } from "@/context/AuthContext"; 
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 interface PostCardProps {
   post: Post;
@@ -21,7 +23,8 @@ interface PostCardProps {
 
 export function PostCard({ post }: PostCardProps) {
   const updatePostReactions = usePostsStore(state => state.updatePostReactions);
-  const { user: currentUser } = useAuth(); // Get current logged-in user
+  const { user, isGuestMode, signInWithGoogle } = useAuth(); 
+  const { toast } = useToast();
 
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
@@ -38,66 +41,69 @@ export function PostCard({ post }: PostCardProps) {
   useEffect(() => {
     setLikes(post.likes);
     setDislikes(post.dislikes);
-    // Here you could check if currentUser has liked/disliked this post if that state was persisted
-  }, [post.likes, post.dislikes, currentUser, post.id]);
+    // Reset local liked/disliked state if user changes or post changes
+    // This is a simplification; a more robust solution would store user's reactions
+    setLiked(false); 
+    setDisliked(false);
+  }, [post.likes, post.dislikes, user, post.id]);
 
 
-  const handleLike = () => {
-    if (!currentUser) {
-      // Optionally prompt to sign in
+  const handleInteraction = (actionType: 'like' | 'dislike') => {
+    if (!user || isGuestMode) {
+      toast({
+          title: "Sign in to interact",
+          description: "Please sign in with Google to like or dislike posts.",
+          action: <ToastAction altText="Sign In" onClick={signInWithGoogle}>Sign In</ToastAction>
+      });
       return;
     }
+
     let newLikesCount = likes;
     let newDislikesCount = dislikes;
+    let newLikedState = liked;
+    let newDislikedState = disliked;
 
-    if (liked) { 
-      setLiked(false);
-      newLikesCount = likes - 1;
-    } else { 
-      setLiked(true);
-      newLikesCount = likes + 1;
-      if (disliked) { 
-        setDisliked(false);
-        newDislikesCount = dislikes - 1;
+    if (actionType === 'like') {
+      if (liked) {
+        newLikedState = false;
+        newLikesCount--;
+      } else {
+        newLikedState = true;
+        newLikesCount++;
+        if (disliked) {
+          newDislikedState = false;
+          newDislikesCount--;
+        }
+      }
+    } else if (actionType === 'dislike') {
+      if (disliked) {
+        newDislikedState = false;
+        newDislikesCount--;
+      } else {
+        newDislikedState = true;
+        newDislikesCount++;
+        if (liked) {
+          newLikedState = false;
+          newLikesCount--;
+        }
       }
     }
-    setLikes(newLikesCount);
-    setDislikes(newDislikesCount);
-    updatePostReactions(post.id, newLikesCount, newDislikesCount, currentUser.uid); 
-  };
-
-  const handleDislike = () => {
-    if (!currentUser) {
-      // Optionally prompt to sign in
-      return;
-    }
-    let newLikesCount = likes;
-    let newDislikesCount = dislikes;
-
-    if (disliked) { 
-      setDisliked(false);
-      newDislikesCount = dislikes - 1;
-    } else { 
-      setDisliked(true);
-      newDislikesCount = dislikes + 1;
-      if (liked) { 
-        setLiked(false);
-        newLikesCount = likes - 1;
-      }
-    }
-    setLikes(newLikesCount);
-    setDislikes(newDislikesCount);
-    updatePostReactions(post.id, newLikesCount, newDislikesCount, currentUser.uid); 
+    
+    setLiked(newLikedState);
+    setDislikes(newDislikedState);
+    setLikes(newLikesCount < 0 ? 0 : newLikesCount);
+    setDislikes(newDislikesCount < 0 ? 0 : newDislikesCount);
+    updatePostReactions(post.id, newLikesCount < 0 ? 0 : newLikesCount, newDislikesCount < 0 ? 0 : newDislikesCount, user.uid); 
   };
   
-  // Display post author's info if available, otherwise the generated pseudonym
   const displayName = post.userDisplayName || post.pseudonym;
   const avatarInitial = displayName?.substring(0, 1).toUpperCase();
   const avatarImageSrc = post.userPhotoURL;
 
+  const canInteract = !!user && !isGuestMode;
 
   return (
-    <Card className="mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+    <Card className="mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300" id={`post-${post.id}`}>
       <CardHeader className="flex flex-row items-center space-x-3 pb-3">
         <Avatar className="h-10 w-10">
           {avatarImageSrc ? (
@@ -168,20 +174,22 @@ export function PostCard({ post }: PostCardProps) {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={handleLike} 
-            className={`flex items-center space-x-1 ${liked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
-            disabled={!currentUser} // Disable if not logged in
+            onClick={() => handleInteraction('like')}
+            className={`flex items-center space-x-1 ${canInteract && liked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}
+            aria-pressed={canInteract && liked}
+            title={!canInteract ? "Sign in to like" : (liked ? "Unlike post" : "Like post")}
           >
-            <Heart className={`h-5 w-5 ${liked ? 'fill-current' : ''}`} /> <span>{likes}</span>
+            <Heart className={`h-5 w-5 ${canInteract && liked ? 'fill-current' : ''}`} /> <span>{likes}</span>
           </Button>
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={handleDislike} 
-            className={`flex items-center space-x-1 ${disliked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`}
-            disabled={!currentUser} // Disable if not logged in
+            onClick={() => handleInteraction('dislike')}
+            className={`flex items-center space-x-1 ${canInteract && disliked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`}
+            aria-pressed={canInteract && disliked}
+            title={!canInteract ? "Sign in to dislike" : (disliked ? "Remove dislike" : "Dislike post")}
           >
-            <ThumbsDown className={`h-5 w-5 ${disliked ? 'fill-current' : ''}`} /> <span>{dislikes}</span>
+            <ThumbsDown className={`h-5 w-5 ${canInteract && disliked ? 'fill-current' : ''}`} /> <span>{dislikes}</span>
           </Button>
         </div>
         <div className="flex space-x-2">
@@ -196,3 +204,4 @@ export function PostCard({ post }: PostCardProps) {
     </Card>
   );
 }
+

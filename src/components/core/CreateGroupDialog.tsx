@@ -22,7 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { Group, ActivityType } from "@/lib/types";
 import { usePostsStore } from "@/store/postsStore";
 import { useAuth } from "@/context/AuthContext";
-import { Loader2, LogIn, Image as ImageIcon } from "lucide-react";
+import { Loader2, LogIn, Image as ImageIcon, UserCheck, AlertCircle } from "lucide-react"; // Added UserCheck, AlertCircle
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const groupFormSchema = z.object({
   name: z.string().min(3, "Group name must be at least 3 characters long.").max(50, "Group name must be at most 50 characters long."),
@@ -42,7 +43,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const addGroup = usePostsStore(state => state.addGroup);
   const addActivityItem = usePostsStore(state => state.addActivityItem);
-  const { user, loading: authLoading, signInWithGoogle } = useAuth();
+  const { user, isGuestMode, loading: authLoading, signInWithGoogle } = useAuth();
 
   const form = useForm<GroupFormValues>({
     resolver: zodResolver(groupFormSchema),
@@ -64,7 +65,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
   }, [isOpen, form]);
 
   async function onSubmit(data: GroupFormValues) {
-    if (!user) {
+    if (!user) { // This covers guests as well
       toast({
         title: "Authentication Required",
         description: "Please sign in to create a group.",
@@ -125,7 +126,36 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
       );
     }
 
-    if (!user) {
+    if (!user && isGuestMode) { // Guest mode
+      return (
+        <div className="py-6 text-center">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-semibold">Guest Mode Notice</DialogTitle>
+          </DialogHeader>
+            <Alert variant="default" className="my-4 text-left bg-secondary/30">
+              <UserCheck className="h-5 w-5 text-accent" />
+              <AlertTitle className="font-semibold">Sign In to Create Groups</AlertTitle>
+              <AlertDescription>
+                You are currently browsing as a guest. To create a new group, please sign in with your Google account.
+              </AlertDescription>
+            </Alert>
+          <Button onClick={() => { onOpenChange(false); signInWithGoogle(); }} className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90 w-full">
+            <LogIn className="mr-2 h-4 w-4" />
+            Sign in with Google
+          </Button>
+          <DialogFooter className="sm:justify-center mt-6">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" className="w-full">
+                Cancel
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </div>
+      );
+    }
+
+
+    if (!user && !isGuestMode) { // Not signed in, not guest
       return (
         <div className="py-10 text-center">
           <DialogHeader>
@@ -149,7 +179,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
       );
     }
 
-
+    // User is signed in (not a guest)
     return (
       <>
         <DialogHeader>
@@ -230,3 +260,4 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
     </Dialog>
   );
 }
+

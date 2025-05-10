@@ -5,10 +5,11 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LogIn, LogOut, User as UserIcon } from "lucide-react"; // Import UserIcon
+import { LogIn, LogOut, User as UserIcon, Users, Info } from "lucide-react"; 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function AccountPage() {
-  const { user, loading, signInWithGoogle, signOutUser } = useAuth();
+  const { user, isGuestMode, loading, signInWithGoogle, signInAsGuest, signOutUser } = useAuth();
 
   if (loading) {
     return (
@@ -28,7 +29,7 @@ export default function AccountPage() {
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold text-primary mb-6">Account Settings</h1>
       <div className="bg-card p-6 rounded-lg shadow-md border">
-        {user ? (
+        {user && !isGuestMode ? ( // Google Signed-In User
           <div className="flex flex-col items-center sm:items-start">
             <div className="flex items-center mb-6">
               <Avatar className="h-16 w-16 mr-4">
@@ -51,18 +52,56 @@ export default function AccountPage() {
               Sign Out
             </Button>
           </div>
-        ) : (
+        ) : isGuestMode ? ( // Guest User
+           <div className="flex flex-col items-center sm:items-start">
+            <div className="flex items-center mb-6">
+              <Avatar className="h-16 w-16 mr-4">
+                <AvatarFallback className="bg-muted text-muted-foreground">
+                  <Users />
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h2 className="text-2xl font-semibold text-foreground">Guest User</h2>
+                <p className="text-sm text-muted-foreground">Browsing anonymously</p>
+              </div>
+            </div>
+            <Alert variant="default" className="mb-6 bg-secondary/50">
+              <Info className="h-5 w-5 text-primary" />
+              <AlertTitle className="text-primary">You are in Guest Mode</AlertTitle>
+              <AlertDescription className="text-muted-foreground">
+                As a guest, you can view posts and groups. To create posts, join groups, or interact (like/dislike), please sign in with a Google account.
+              </AlertDescription>
+            </Alert>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <Button onClick={signInWithGoogle} className="bg-accent text-accent-foreground hover:bg-accent/90 flex-grow sm:flex-grow-0">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign in with Google
+                </Button>
+                <Button onClick={signOutUser} variant="outline" className="flex-grow sm:flex-grow-0">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Exit Guest Mode
+                </Button>
+            </div>
+          </div>
+        ) : ( // Not signed in, not a guest
           <div className="text-center sm:text-left">
             <p className="text-muted-foreground mb-6">
-              Sign in to manage your account and access more features.
+              Sign in to create posts, join groups, and interact with content. You can also continue as a guest to browse.
             </p>
-            <Button onClick={signInWithGoogle} className="bg-accent text-accent-foreground hover:bg-accent/90 w-full sm:w-auto">
-              <LogIn className="mr-2 h-4 w-4" />
-              Sign in with Google
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4">
+                <Button onClick={signInWithGoogle} className="bg-accent text-accent-foreground hover:bg-accent/90 flex-grow sm:flex-grow-0">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign in with Google
+                </Button>
+                <Button onClick={signInAsGuest} variant="outline" className="flex-grow sm:flex-grow-0">
+                    <Users className="mr-2 h-4 w-4" />
+                    Continue as Guest
+                </Button>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
+

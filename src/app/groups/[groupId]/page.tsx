@@ -5,19 +5,20 @@ import { PostCard } from "@/components/core/PostCard";
 import { usePostsStore } from "@/store/postsStore";
 import { useUiStore } from "@/store/uiStore"; 
 import type { Post, Group } from "@/lib/types";
-import { useParams, notFound } from "next/navigation";
+import { useParams, notFound, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/context/AuthContext"; // Import useAuth
+import { useAuth } from "@/context/AuthContext"; 
 
 export default function GroupPage() {
   const params = useParams();
+  const router = useRouter();
   const groupId = params.groupId as string;
 
-  const { user, loading: authLoading } = useAuth(); // Get user and auth loading state
+  const { user, isGuestMode, loading: authLoading } = useAuth(); 
   const getPostsByGroupId = usePostsStore(state => state.getPostsByGroupId);
   const getGroupById = usePostsStore(state => state.getGroupById);
   const openCreatePostDialog = useUiStore(state => state.openCreatePostDialog);
@@ -33,7 +34,7 @@ export default function GroupPage() {
       if (currentGroup) {
         setPosts(getPostsByGroupId(groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       }
-      setIsLoading(false);
+      setIsLoading(false); // Done loading group details
     }
   }, [groupId, getPostsByGroupId, getGroupById]);
 
@@ -43,8 +44,15 @@ export default function GroupPage() {
      setPosts(newPosts);
   }, [usePostsStore(state => state.posts), groupId, getPostsByGroupId]);
 
+  // Effect to redirect if group is not found after loading, including auth loading
+  useEffect(() => {
+    if (!isLoading && !authLoading && !group) {
+      notFound();
+    }
+  }, [isLoading, authLoading, group, router]);
 
-  if (isLoading || authLoading) { // Consider authLoading as well
+
+  if (isLoading || authLoading) { 
      return (
       <div className="max-w-2xl mx-auto">
         <Skeleton className="h-10 w-3/4 mb-2" />
@@ -74,8 +82,9 @@ export default function GroupPage() {
     );
   }
 
-  if (!group) {
-    notFound();
+  if (!group) { // Should be caught by the useEffect above now, but kept as a safeguard
+    notFound(); // Or return a specific "Group not found" component
+    return null;
   }
 
   const handleOpenCreatePostInGroup = () => {
@@ -95,7 +104,7 @@ export default function GroupPage() {
             size="sm" 
             onClick={handleOpenCreatePostInGroup} 
             className="ml-4 hidden md:inline-flex border-accent text-accent hover:bg-accent hover:text-accent-foreground"
-            // Disabled state could be handled if !user and !authLoading, but dialog will prompt sign-in
+            // Button not disabled; dialog handles auth/guest state
           >
             <Edit3 className="mr-2 h-4 w-4" /> Post to Group
           </Button>
@@ -110,7 +119,7 @@ export default function GroupPage() {
             size="lg" 
             onClick={handleOpenCreatePostInGroup} 
             className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-            // Disabled state could be handled if !user and !authLoading, but dialog will prompt sign-in
+            // Button not disabled; dialog handles auth/guest state
           >
             <Edit3 className="mr-2 h-5 w-5" /> Post to {group.name}
           </Button>
@@ -128,7 +137,7 @@ export default function GroupPage() {
           <Button 
             onClick={handleOpenCreatePostInGroup} 
             className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground hidden md:inline-flex"
-            // Disabled state could be handled if !user and !authLoading, but dialog will prompt sign-in
+            // Button not disabled; dialog handles auth/guest state
           >
              Create First Post
           </Button>
@@ -137,3 +146,4 @@ export default function GroupPage() {
     </div>
   );
 }
+

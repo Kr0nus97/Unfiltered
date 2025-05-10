@@ -1,16 +1,16 @@
 
-"use client"; // Ensure this is at the top if using hooks like useUiStore or useAuth
+"use client"; 
 
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Plus, User } from "lucide-react";
 import { useUiStore } from "@/store/uiStore";
-import { useAuth } from "@/context/AuthContext"; // Import useAuth
+import { useAuth } from "@/context/AuthContext"; 
 
 export default function AppHeader() {
   const openCreatePostDialog = useUiStore(state => state.openCreatePostDialog);
-  const { user, loading: authLoading } = useAuth(); // Get user and auth loading state
+  const { user, isGuestMode, loading: authLoading } = useAuth(); 
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -23,8 +23,8 @@ export default function AppHeader() {
             variant="default"
             className="hidden md:inline-flex bg-accent text-accent-foreground hover:bg-accent/90"
             onClick={() => openCreatePostDialog()}
-            // Button is not disabled here; dialog will handle auth check
-            // disabled={authLoading} // Optionally disable if auth is still loading
+            // Button is not disabled here. Dialog will handle auth check and guest mode.
+            // It's fine for guests to click it and see the prompt.
           >
             <Plus className="h-4 w-4" />
             Create Post
@@ -40,3 +40,4 @@ export default function AppHeader() {
     </header>
   );
 }
+
