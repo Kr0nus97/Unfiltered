@@ -13,7 +13,7 @@ export interface Post {
   id: string;
   groupId: string;
   groupName?: string; // Denormalized for easier display
-  pseudonym: string;
+  pseudonym: string; // Always present. Generated if isAnonymous, or can be a fallback.
   text?: string;
   imageUrl?: string;
   videoUrl?: string;
@@ -28,23 +28,25 @@ export interface Post {
   isFlagged?: boolean;
   flagReason?: string;
   userId?: string; // Firebase UID of the user who created the post
-  userDisplayName?: string; // Optional: Display name of the user
-  userPhotoURL?: string; // Optional: Photo URL of the user
+  userDisplayName?: string; // Optional: Display name of the user. Used if not anonymous.
+  userPhotoURL?: string; // Optional: Photo URL of the user. Used if not anonymous.
+  isAnonymous?: boolean; // Flag to indicate if the post is made in UnFiltered mode
 }
 
 export interface Comment {
   id: string;
   postId: string;
-  userId: string;
-  userDisplayName: string;
-  userPhotoURL?: string;
-  pseudonym: string; // Pseudonym for the comment
+  userId: string; // Firebase UID of the commenter
+  userDisplayName: string; // Actual display name of the commenter (for mentions, activity feed)
+  userPhotoURL?: string; // Actual photo URL of the commenter
+  pseudonym: string; // Always present. Generated if isAnonymous.
   text: string;
   createdAt: string; // ISO string
   likes: number;
   dislikes: number;
   replies?: Comment[]; // Nested replies
   mentions?: string[]; // Array of user IDs mentioned
+  isAnonymous?: boolean; // Flag to indicate if the comment is made in UnFiltered mode
 }
 
 
@@ -317,6 +319,8 @@ export interface UserCreatedPostData extends BaseActivityData {
   type: 'USER_CREATED_POST';
   postId: string;
   postSnippet: string;
+  isAnonymousPost?: boolean; // Added to track if the created post was anonymous
+  postPseudonym?: string; // Store the pseudonym if it was an anonymous post
 }
 
 export interface UserCreatedGroupData extends BaseActivityData {
@@ -330,12 +334,16 @@ export interface UserPostFlaggedData extends BaseActivityData {
   postId?: string; 
   postSnippet: string;
   flagReason: string;
+  isUserAnonymousPost?: boolean; // Was the flagged post by the current user and anonymous?
+  postPseudonym?: string;
 }
 
 export interface OthersLikedUserPostData extends BaseActivityData {
   type: 'OTHERS_LIKED_USER_POST';
   postId: string;
   postSnippet?: string;
+  isUserAnonymousPost?: boolean; // Was the liked post by the current user and anonymous?
+  postPseudonym?: string;
 }
 
 export interface OthersCommentedOnUserPostData extends BaseActivityData {
@@ -344,6 +352,8 @@ export interface OthersCommentedOnUserPostData extends BaseActivityData {
   postSnippet?: string;
   commentId: string; // ID of the comment
   commentSnippet: string;
+  isUserAnonymousPost?: boolean; // Was the commented-on post by the current user and anonymous?
+  postPseudonym?: string; 
 }
 
 export interface UserMentionedInCommentData extends BaseActivityData {
@@ -373,3 +383,4 @@ export interface ActivityItem {
   isRead: boolean;
   data: ActivityItemData;
 }
+

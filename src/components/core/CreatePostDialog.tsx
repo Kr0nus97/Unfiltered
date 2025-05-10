@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -18,11 +19,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch"; // Import Switch
 import { useToast } from "@/hooks/use-toast";
 import { moderateContent, type ModerateContentInput, type ModerateContentOutput } from "@/ai/flows/moderate-content";
-import type { Group, Post, ActivityType } from "@/lib/types"; 
+import type { Group, Post, ActivityType, UserCreatedPostData } from "@/lib/types"; 
 import { generatePseudonym } from "@/lib/pseudonyms";
-import { Globe, Image as ImageIcon, Link as LinkIcon, Loader2, Video, Music, LogIn, UserCheck, AlertCircle } from "lucide-react"; // Added UserCheck, AlertCircle
+import { Globe, Image as ImageIcon, Link as LinkIcon, Loader2, Video, Music, LogIn, UserCheck, AlertCircle, Fingerprint } from "lucide-react"; 
 import { usePostsStore } from "@/store/postsStore"; 
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,11 +33,12 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const postFormSchema = z.object({
   groupId: z.string().min(1, "Please select a group"),
-  text: z.string().max(5000, "Post text cannot exceed 5000 characters.").optional(), // Added maxLength
+  text: z.string().max(5000, "Post text cannot exceed 5000 characters.").optional(), 
   imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   videoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   audioUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   linkUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  isAnonymous: z.boolean().optional(), // Add isAnonymous field
 }).refine(data => data.text || data.imageUrl || data.videoUrl || data.audioUrl || data.linkUrl, {
   message: "At least one field (text, image, video, audio, or link) must be filled.",
   path: ["text"], 
@@ -51,7 +54,7 @@ interface CreatePostDialogProps {
 
 export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: CreatePostDialogProps) {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false); // Renamed from isModerating for clarity
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const addPost = usePostsStore(state => state.addPost);
   const groups = usePostsStore(state => state.groups); 
   const addActivityItem = usePostsStore(state => state.addActivityItem);
@@ -66,6 +69,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
       videoUrl: "",
       audioUrl: "",
       linkUrl: "",
+      isAnonymous: false, // Default to not anonymous
     },
   });
 
@@ -78,22 +82,22 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         videoUrl: "",
         audioUrl: "",
         linkUrl: "",
+        isAnonymous: false, // Reset anonymous toggle
       });
     }
   }, [isOpen, defaultGroupId, form, groups]);
   
   useEffect(() => {
-    // Only set default groupId if user is logged in (not guest) or if it's explicitly passed
     if (user && !isGuestMode && isOpen && !form.getValues("groupId") && (defaultGroupId || (groups.length > 0 && !defaultGroupId))) {
         form.setValue("groupId", defaultGroupId || groups[0].id);
-    } else if (isOpen && defaultGroupId && !form.getValues("groupId")) { // Allow defaultGroupId even for guests initially if provided
+    } else if (isOpen && defaultGroupId && !form.getValues("groupId")) { 
         form.setValue("groupId", defaultGroupId);
     }
   }, [user, isGuestMode, isOpen, defaultGroupId, form, groups]);
 
 
   async function onSubmit(data: PostFormValues) {
-    if (!user) { // This covers guests as well, since user is null for guests
+    if (!user) { 
       toast({
         title: "Authentication Required",
         description: "Please sign in to create a post.",
@@ -132,11 +136,13 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
           userId: user.uid,
           type: 'USER_POST_FLAGGED',
           data: {
-            type: 'USER_POST_FLAGGED', // For discriminated union
+            type: 'USER_POST_FLAGGED', 
             postSnippet: (data.text || "Media post").substring(0, 50) + '...',
             groupId: data.groupId,
             groupName: selectedGroup?.name || data.groupId,
             flagReason: moderationResult.flagReason || "Violating community guidelines",
+            isUserAnonymousPost: data.isAnonymous,
+            postPseudonym: data.isAnonymous ? generatePseudonym() : undefined, // Only relevant if post was anonymous
           },
         });
         setIsSubmitting(false);
@@ -147,9 +153,9 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         id: crypto.randomUUID(),
         groupId: data.groupId,
         groupName: selectedGroup?.name,
-        pseudonym: generatePseudonym(), 
+        pseudonym: data.isAnonymous ? generatePseudonym() : (user.displayName || "User"), // Use generated for anonymous, else display name
         userId: user.uid, 
-        userDisplayName: user.displayName || "Anonymous",
+        userDisplayName: user.displayName || "Anonymous User", // Store actual user info internally
         userPhotoURL: user.photoURL,
         text: data.text,
         imageUrl: data.imageUrl,
@@ -160,6 +166,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         likes: 0,
         dislikes: 0,
         commentsCount: 0,
+        isAnonymous: data.isAnonymous, // Store anonymous status
       };
       
       addPost(newPost); 
@@ -167,18 +174,20 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         userId: user.uid,
         type: 'USER_CREATED_POST',
         data: {
-          type: 'USER_CREATED_POST', // For discriminated union
+          type: 'USER_CREATED_POST',
           postId: newPost.id,
           postSnippet: (newPost.text || "Media post").substring(0, 50) + '...',
           groupId: newPost.groupId,
           groupName: newPost.groupName || newPost.groupId,
-        },
+          isAnonymousPost: newPost.isAnonymous, // Pass anonymous status to activity
+          postPseudonym: newPost.isAnonymous ? newPost.pseudonym : undefined,
+        } as UserCreatedPostData,
       });
 
 
       toast({
         title: "Post Created!",
-        description: "Your anonymous post has been published.",
+        description: data.isAnonymous ? "Your anonymous post has been published." : "Your post has been published.",
       });
       form.reset(); 
       onOpenChange(false); 
@@ -204,7 +213,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
       );
     }
 
-    if (!user && isGuestMode) { // Guest mode
+    if (!user && isGuestMode) { 
       return (
         <div className="py-6 text-center">
           <DialogHeader>
@@ -233,7 +242,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
     }
 
 
-    if (!user && !isGuestMode) { // Not signed in, not guest
+    if (!user && !isGuestMode) { 
       return (
         <div className="py-10 text-center">
           <DialogHeader>
@@ -256,13 +265,13 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         </div>
       );
     }
-    // User is signed in (not a guest)
+    
     return (
       <>
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold">Create Anonymous Post</DialogTitle>
+          <DialogTitle className="text-2xl font-semibold">Create Post</DialogTitle>
           <DialogDescription>
-            Share your thoughts, images, videos, audio, or links. Your identity remains anonymous.
+            Share your thoughts, images, videos, audio, or links. Choose to post with your profile or in UnFiltered mode.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
@@ -304,7 +313,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
               {...form.register("text")}
               className="min-h-[100px] resize-y"
             />
-             {form.formState.errors.text && ( // Display text-specific errors (like maxLength) here
+             {form.formState.errors.text && ( 
               <p className="text-xs text-destructive">{form.formState.errors.text.message}</p>
             )}
           </div>
@@ -373,7 +382,26 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
             )}
           </div>
           
-           {/* General form error for "at least one field" */}
+          {user && !isGuestMode && ( // Show UnFiltered mode toggle only to logged-in, non-guest users
+            <div className="flex items-center space-x-2 pt-2">
+              <Controller
+                control={form.control}
+                name="isAnonymous"
+                render={({ field }) => (
+                  <Switch
+                    id="isAnonymous"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    aria-label="Post in UnFiltered Mode"
+                  />
+                )}
+              />
+              <Label htmlFor="isAnonymous" className="text-sm flex items-center">
+                <Fingerprint className="h-4 w-4 mr-2 text-primary" /> Post in UnFiltered Mode (Anonymous)
+              </Label>
+            </div>
+          )}
+           
            {form.formState.errors.text && form.formState.errors.text.type === "manual" && (
              <p className="text-sm text-destructive">{form.formState.errors.text.message}</p>
            )}
@@ -392,7 +420,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
                   Submitting...
                 </>
               ) : (
-                "Post Anonymously"
+                form.watch("isAnonymous") ? "Post Anonymously" : "Post with Profile" 
               )}
             </Button>
           </DialogFooter>
@@ -409,3 +437,4 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
     </Dialog>
   );
 }
+

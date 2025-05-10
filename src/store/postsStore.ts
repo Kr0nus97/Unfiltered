@@ -72,111 +72,124 @@ const MOCK_GROUPS_INITIAL_DEFINITION: Omit<Group, 'postCount' | 'memberCount'>[]
   { id: 'finance', name: 'Financial Freedom', description: 'Discussing investments, savings, and personal finance.', creatorId: MOCK_USER_UID_4, backgroundImageUrl: 'https://picsum.photos/seed/financegroup/600/300' },
 ];
 
-const MOCK_POSTS_INITIAL_DATA: Omit<Post, 'groupName' | 'createdAt' | 'likes' | 'dislikes' | 'commentsCount' | 'comments'>[] = [
+const MOCK_POSTS_INITIAL_DATA: Omit<Post, 'groupName' | 'createdAt' | 'likes' | 'dislikes' | 'commentsCount' | 'comments' | 'pseudonym'>[] = [
   {
-    id: '1', groupId: 'tech', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
+    id: '1', groupId: 'tech', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
     text: "Just upgraded to the latest **Quantum Processor X1**! Performance is mind-blowing. @BobTheBuilder have you tried it? Check out the [official benchmarks](https://example.com/benchmarks).",
+    isAnonymous: false,
   },
   {
-    id: '6', groupId: 'tech', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
+    id: '6', groupId: 'tech', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
     text: "AI is evolving so fast. What are some ethical considerations we should be discussing more openly? @AliceWonderland, your thoughts?",
+    isAnonymous: true, // This post will be anonymous
   },
   {
-    id: '8', groupId: 'videos', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", userPhotoURL: "https://picsum.photos/seed/charlie/40/40",
+    id: '8', groupId: 'videos', userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", userPhotoURL: "https://picsum.photos/seed/charlie/40/40",
     text: "Check out this incredible drone footage of the Northern Lights! @DianaPrince you'd love this.", videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    isAnonymous: false,
   },
   {
-    id: '10', groupId: 'gaming', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
+    id: '10', groupId: 'gaming', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
     text: "Hilarious gaming moments compilation video I found. @BobTheBuilder, remember that round?", videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    isAnonymous: true,
   },
   {
-    id: '13', groupId: 'science', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
+    id: '13', groupId: 'science', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
     text: "Mind-boggling discovery about black hole thermodynamics published today. Link to the paper: [ArXiv](https://arxiv.org/)", linkUrl: "https://arxiv.org/", linkTitle: "Black Hole Thermodynamics Paper",
+    isAnonymous: false,
   },
   {
-    id: '2', groupId: 'politics', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_4, userDisplayName: "Diana Prince", userPhotoURL: "https://picsum.photos/seed/diana/40/40",
+    id: '2', groupId: 'politics', userId: MOCK_USER_UID_4, userDisplayName: "Diana Prince", userPhotoURL: "https://picsum.photos/seed/diana/40/40",
     text: "The new environmental bill proposal seems promising, but I'm concerned about its economic impact. What are your thoughts? It aims to reduce emissions by 30% by 2030.", imageUrl: 'https://picsum.photos/seed/politics/600/300',
+    isAnonymous: false,
   },
   {
-    id: '7', groupId: 'books', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
+    id: '7', groupId: 'books', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
     text: "Just finished reading 'Dune Messiah'. What a sequel! The philosophical undertones are even deeper. Highly recommend for sci-fi fans.", imageUrl: 'https://picsum.photos/seed/books/600/350',
+    isAnonymous: true,
   },
    {
-    id: '9', groupId: 'music', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
+    id: '9', groupId: 'music', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
     text: "This new lofi track is perfect for studying. So chill.", audioUrl: 'https://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg',
+    isAnonymous: false,
   },
   {
-    id: '3', groupId: 'showerthoughts', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
+    id: '3', groupId: 'showerthoughts', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
     text: "If we can't see air, do fish see water?",
+    isAnonymous: true,
   },
   {
-    id: '11', groupId: 'photography', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
+    id: '11', groupId: 'photography', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
     text: "Captured this stunning sunset over the mountains last night. #nofilter", imageUrl: 'https://picsum.photos/seed/sunsetphoto/700/450',
+    isAnonymous: false,
   },
   {
-    id: '4', groupId: 'gaming', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
+    id: '4', groupId: 'gaming', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
     text: "CyberNeon Chronicles just dropped its new DLC. The storyline is epic! And the new zone looks amazing.", imageUrl: 'https://picsum.photos/seed/gaming/600/400',
+    isAnonymous: false,
   },
   {
-    id: '14', groupId: 'diy', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", userPhotoURL: "https://picsum.photos/seed/charlie/40/40",
+    id: '14', groupId: 'diy', userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", userPhotoURL: "https://picsum.photos/seed/charlie/40/40",
     text: "My latest weekend project: a hand-knitted scarf. What do you think?", imageUrl: 'https://picsum.photos/seed/diyscarf/500/500',
+    isAnonymous: true,
   },
   {
-    id: '15', groupId: 'tech', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_4, userDisplayName: "Diana Prince", userPhotoURL: "https://picsum.photos/seed/diana/40/40",
+    id: '15', groupId: 'tech', userId: MOCK_USER_UID_4, userDisplayName: "Diana Prince", userPhotoURL: "https://picsum.photos/seed/diana/40/40",
     text: "Debating switching to a new code editor. VSCode vs Sublime vs Neovim - what are your preferences and why?",
+    isAnonymous: false,
   },
   {
-    id: '5', groupId: 'foodies', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
+    id: '5', groupId: 'foodies', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
     text: "Found this amazing recipe for vegan lasagna. You won't believe it's not dairy! [Link to recipe](https://example.com/vegan-lasagna)", linkUrl: "https://example.com/vegan-lasagna", linkTitle: "Amazing Vegan Lasagna Recipe",
+    isAnonymous: false,
   },
   {
-    id: '12', groupId: 'travel', pseudonym: generatePseudonym(), userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", userPhotoURL: "https://picsum.photos/seed/charlie/40/40",
+    id: '12', groupId: 'travel', userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", userPhotoURL: "https://picsum.photos/seed/charlie/40/40",
     text: "Just got back from a backpacking trip through Southeast Asia. AMA!",
+    isAnonymous: true,
   },
-  // More posts for new groups
-  { id: '16', groupId: 'memes', pseudonym: generatePseudonym(), text: "This cat meme is gold. 😂", imageUrl: 'https://picsum.photos/seed/catmeme/500/400', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland" },
-  { id: '17', groupId: 'gardening', pseudonym: generatePseudonym(), text: "My tomatoes are finally ripening! 🍅", imageUrl: 'https://picsum.photos/seed/tomatoes/600/400', userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown" },
-  { id: '18', groupId: 'pets', pseudonym: generatePseudonym(), text: "My dog just learned a new trick! So proud. 🐶", videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder" },
-  { id: '19', groupId: 'finance', pseudonym: generatePseudonym(), text: "What are your top stock picks for this quarter? Looking for some advice. @AliceWonderland any ideas?", linkUrl: 'https://example.com/market-analysis', linkTitle: "Q3 Market Analysis", userId: MOCK_USER_UID_4, userDisplayName: "Diana Prince" },
-  { id: '20', groupId: 'tech', pseudonym: generatePseudonym(), text: "Working on a new side project with Next.js and Tailwind. Loving the developer experience!", userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder" },
+  { id: '16', groupId: 'memes', text: "This cat meme is gold. 😂", imageUrl: 'https://picsum.photos/seed/catmeme/500/400', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", isAnonymous: false },
+  { id: '17', groupId: 'gardening', text: "My tomatoes are finally ripening! 🍅", imageUrl: 'https://picsum.photos/seed/tomatoes/600/400', userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", isAnonymous: true },
+  { id: '18', groupId: 'pets', text: "My dog just learned a new trick! So proud. 🐶", videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", isAnonymous: false },
+  { id: '19', groupId: 'finance', text: "What are your top stock picks for this quarter? Looking for some advice. @AliceWonderland any ideas?", linkUrl: 'https://example.com/market-analysis', linkTitle: "Q3 Market Analysis", userId: MOCK_USER_UID_4, userDisplayName: "Diana Prince", isAnonymous: true },
+  { id: '20', groupId: 'tech', text: "Working on a new side project with Next.js and Tailwind. Loving the developer experience!", userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", isAnonymous: false },
 ];
 
 const MOCK_COMMENTS_INITIAL_DATA: Omit<Comment, 'createdAt' | 'likes' | 'dislikes' | 'replies' | 'pseudonym'>[] = [
-  { id: 'c1', postId: '1', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", text: "Awesome! I've been waiting for reviews on the X1. How's the battery life with it?", mentions: [] },
-  { id: 'c2', postId: '1', userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", text: "Nice setup, @Alice Wonderland! Looks clean.", mentions: ['mock-user-uid-1'] },
-  { id: 'c3', postId: '6', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", text: "Great question, @BobTheBuilder! Transparency and bias in algorithms are my main concerns.", mentions: ['mock-user-uid-2'] },
-  { id: 'c4', postId: '2', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", text: "I agree, the economic impact needs careful consideration. Are there any studies on that yet?", mentions: [] },
-  { id: 'c5', postId: '3', userId: MOCK_USER_UID_4, userDisplayName: "Diana Prince", text: "Haha, deep thoughts indeed! 🤯", mentions: [] },
+  { id: 'c1', postId: '1', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", text: "Awesome! I've been waiting for reviews on the X1. How's the battery life with it?", mentions: [], isAnonymous: false },
+  { id: 'c2', postId: '1', userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", text: "Nice setup, @AliceWonderland! Looks clean.", mentions: ['mock-user-uid-1'], isAnonymous: true },
+  { id: 'c3', postId: '6', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", text: "Great question, @BobTheBuilder! Transparency and bias in algorithms are my main concerns.", mentions: ['mock-user-uid-2'], isAnonymous: false }, // Post 6 is anonymous, comment is not
+  { id: 'c4', postId: '2', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", text: "I agree, the economic impact needs careful consideration. Are there any studies on that yet?", mentions: [], isAnonymous: false },
+  { id: 'c5', postId: '3', userId: MOCK_USER_UID_4, userDisplayName: "Diana Prince", text: "Haha, deep thoughts indeed! 🤯", mentions: [], isAnonymous: true }, // Post 3 is anonymous, comment is anonymous
 ];
 
 const MOCK_COMMENTS: Comment[] = MOCK_COMMENTS_INITIAL_DATA.map((commentData, index) => {
   const post = MOCK_POSTS_INITIAL_DATA.find(p => p.id === commentData.postId);
-  const postCreationDate = post ? PUBLIC_RELEASE_DATE : PUBLIC_RELEASE_DATE; // Fallback if post not found
+  const postCreationDate = post ? PUBLIC_RELEASE_DATE : PUBLIC_RELEASE_DATE; 
   
   let date;
-  // Stagger comment times slightly after their respective posts
   const postTime = new Date(postCreationDate);
   switch (index % 3) {
-    case 0: date = subtractTime(postTime, -5 - (index * 2), 'minutes'); break; // 5, 11, 17 mins after post
-    case 1: date = subtractTime(postTime, -10 - (index * 2), 'minutes'); break; // 10, 16, 22 mins after post
-    case 2: date = subtractTime(postTime, -15 - (index * 2), 'minutes'); break; // 15, 21, 27 mins after post
+    case 0: date = subtractTime(postTime, -5 - (index * 2), 'minutes'); break; 
+    case 1: date = subtractTime(postTime, -10 - (index * 2), 'minutes'); break; 
+    case 2: date = subtractTime(postTime, -15 - (index * 2), 'minutes'); break; 
     default: date = subtractTime(postTime, -5 - (index * 2), 'minutes');
   }
 
   return {
     ...commentData,
-    pseudonym: generatePseudonym(),
+    pseudonym: commentData.isAnonymous ? generatePseudonym() : (commentData.userDisplayName || "User"),
     createdAt: date,
     likes: Math.floor(Math.random() * 20),
     dislikes: Math.floor(Math.random() * 3),
-    replies: [], // Can be populated later if needed
+    replies: [], 
   };
 });
 
 
 export const MOCK_POSTS: Post[] = MOCK_POSTS_INITIAL_DATA.map((postData, index) => {
   let date;
-  switch (index % 15) { // Spread out post creation times more evenly
+  switch (index % 15) { 
     case 0: date = subtractTime(PUBLIC_RELEASE_DATE, 30 + index, 'minutes'); break; 
     case 1: date = subtractTime(PUBLIC_RELEASE_DATE, 45 + index, 'minutes'); break; 
     case 2: date = subtractTime(PUBLIC_RELEASE_DATE, 1 + Math.floor(index/5), 'hours'); break;    
@@ -203,11 +216,12 @@ export const MOCK_POSTS: Post[] = MOCK_POSTS_INITIAL_DATA.map((postData, index) 
 
   return {
     ...postData,
+    pseudonym: postData.isAnonymous ? generatePseudonym() : (postData.userDisplayName || "User"),
     createdAt: date,
     likes: likes,
     dislikes: dislikes,
     commentsCount: postComments.length,
-    comments: postComments.sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()), // Sort comments by time
+    comments: postComments.sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()), 
     groupName: groupForPost?.name || 'Unknown Group',
   };
 }).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -241,7 +255,7 @@ export const MOCK_GROUPS: Group[] = MOCK_GROUPS_INITIAL_DEFINITION.map(groupDef 
   return {
     ...groupDef,
     postCount: postCount,
-    memberCount: Math.max(1, memberCount + Math.floor(Math.random() * (postCount > 0 ? 5 : 1))), // Add some variability
+    memberCount: Math.max(1, memberCount + Math.floor(Math.random() * (postCount > 0 ? 5 : 1))), 
   };
 }).sort((a,b) => a.name.localeCompare(b.name));
 
@@ -250,12 +264,12 @@ export const MOCK_ACTIVITY_FEED: ActivityItem[] = [
   {
     id: 'act1', userId: MOCK_USER_UID_1, type: 'USER_CREATED_POST',
     timestamp: MOCK_POSTS.find(p => p.id === '1')?.createdAt || PUBLIC_RELEASE_DATE.toISOString(),
-    isRead: false, data: { type: 'USER_CREATED_POST', postId: '1', postSnippet: MOCK_POSTS.find(p=>p.id==='1')?.text?.substring(0,50) + '...' || "A post", groupId: 'tech', groupName: MOCK_GROUPS.find(g=>g.id==='tech')?.name } as UserCreatedPostData,
+    isRead: false, data: { type: 'USER_CREATED_POST', postId: '1', postSnippet: MOCK_POSTS.find(p=>p.id==='1')?.text?.substring(0,50) + '...' || "A post", groupId: 'tech', groupName: MOCK_GROUPS.find(g=>g.id==='tech')?.name, isAnonymousPost: MOCK_POSTS.find(p=>p.id==='1')?.isAnonymous, postPseudonym: MOCK_POSTS.find(p=>p.id==='1')?.pseudonym } as UserCreatedPostData,
   },
   {
     id: 'act2', userId: MOCK_USER_UID_1, type: 'OTHERS_LIKED_USER_POST',
     timestamp: subtractTime(new Date(MOCK_POSTS.find(p => p.id === '1')?.createdAt || PUBLIC_RELEASE_DATE), -5, 'minutes'), isRead: true,
-    data: { type: 'OTHERS_LIKED_USER_POST', postId: '1', postSnippet: MOCK_POSTS.find(p=>p.id==='1')?.text?.substring(0,50) + '...' || "A post", groupId: 'tech', groupName: MOCK_GROUPS.find(g=>g.id==='tech')?.name, actorDisplayName: 'Bob TheBuilder', actorPhotoURL: ALL_MOCK_USERS.find(u=>u.userId===MOCK_USER_UID_2)?.photoURL, actorUserId: MOCK_USER_UID_2 } as OthersLikedUserPostData,
+    data: { type: 'OTHERS_LIKED_USER_POST', postId: '1', postSnippet: MOCK_POSTS.find(p=>p.id==='1')?.text?.substring(0,50) + '...' || "A post", groupId: 'tech', groupName: MOCK_GROUPS.find(g=>g.id==='tech')?.name, actorDisplayName: 'Bob TheBuilder', actorPhotoURL: ALL_MOCK_USERS.find(u=>u.userId===MOCK_USER_UID_2)?.photoURL, actorUserId: MOCK_USER_UID_2, isUserAnonymousPost: MOCK_POSTS.find(p=>p.id==='1')?.isAnonymous, postPseudonym: MOCK_POSTS.find(p=>p.id==='1')?.pseudonym } as OthersLikedUserPostData,
   },
   {
     id: 'act3', userId: MOCK_USER_UID_1, type: 'USER_CREATED_GROUP',
@@ -265,22 +279,22 @@ export const MOCK_ACTIVITY_FEED: ActivityItem[] = [
   {
     id: 'act4', userId: MOCK_USER_UID_1, type: 'USER_POST_FLAGGED',
     timestamp: subtractTime(new Date(MOCK_POSTS.find(p => p.id === '4')?.createdAt || PUBLIC_RELEASE_DATE), -10, 'minutes'), isRead: false,
-    data: { type: 'USER_POST_FLAGGED', postId: '4', postSnippet: MOCK_POSTS.find(p=>p.id==='4')?.text?.substring(0,50) + '...' || "A post", groupId: 'gaming', groupName: MOCK_GROUPS.find(g=>g.id==='gaming')?.name, flagReason: 'Potentially controversial content.' } as UserPostFlaggedData,
+    data: { type: 'USER_POST_FLAGGED', postId: '4', postSnippet: MOCK_POSTS.find(p=>p.id==='4')?.text?.substring(0,50) + '...' || "A post", groupId: 'gaming', groupName: MOCK_GROUPS.find(g=>g.id==='gaming')?.name, flagReason: 'Potentially controversial content.', isUserAnonymousPost: MOCK_POSTS.find(p=>p.id==='4')?.isAnonymous, postPseudonym: MOCK_POSTS.find(p=>p.id==='4')?.pseudonym } as UserPostFlaggedData,
   },
   {
     id: 'act5', userId: MOCK_USER_UID_1, type: 'OTHERS_COMMENTED_ON_USER_POST',
     timestamp: subtractTime(new Date(MOCK_POSTS.find(p => p.id === '1')?.createdAt || PUBLIC_RELEASE_DATE), -15, 'minutes'), isRead: true,
-    data: { type: 'OTHERS_COMMENTED_ON_USER_POST', postId: '1', postSnippet: MOCK_POSTS.find(p=>p.id==='1')?.text?.substring(0,50) + '...' || "A post", groupId: 'tech', groupName: MOCK_GROUPS.find(g=>g.id==='tech')?.name, commentId: 'c1', commentSnippet: MOCK_COMMENTS.find(c=>c.id==='c1')?.text.substring(0,30) + '...' || "A comment", actorDisplayName: 'Bob TheBuilder', actorPhotoURL: ALL_MOCK_USERS.find(u=>u.userId===MOCK_USER_UID_2)?.photoURL, actorUserId: MOCK_USER_UID_2 } as OthersCommentedOnUserPostData,
+    data: { type: 'OTHERS_COMMENTED_ON_USER_POST', postId: '1', postSnippet: MOCK_POSTS.find(p=>p.id==='1')?.text?.substring(0,50) + '...' || "A post", groupId: 'tech', groupName: MOCK_GROUPS.find(g=>g.id==='tech')?.name, commentId: 'c1', commentSnippet: MOCK_COMMENTS.find(c=>c.id==='c1')?.text.substring(0,30) + '...' || "A comment", actorDisplayName: 'Bob TheBuilder', actorPhotoURL: ALL_MOCK_USERS.find(u=>u.userId===MOCK_USER_UID_2)?.photoURL, actorUserId: MOCK_USER_UID_2, isUserAnonymousPost: MOCK_POSTS.find(p=>p.id==='1')?.isAnonymous, postPseudonym: MOCK_POSTS.find(p=>p.id==='1')?.pseudonym } as OthersCommentedOnUserPostData,
   },
   {
     id: 'act6', userId: MOCK_USER_UID_2, type: 'USER_CREATED_POST',
     timestamp: MOCK_POSTS.find(p => p.id === '3')?.createdAt || PUBLIC_RELEASE_DATE.toISOString(), isRead: false,
-    data: { type: 'USER_CREATED_POST', postId: '3', postSnippet: MOCK_POSTS.find(p=>p.id==='3')?.text?.substring(0,50) + '...' || "A post", groupId: 'showerthoughts', groupName: MOCK_GROUPS.find(g=>g.id==='showerthoughts')?.name } as UserCreatedPostData,
+    data: { type: 'USER_CREATED_POST', postId: '3', postSnippet: MOCK_POSTS.find(p=>p.id==='3')?.text?.substring(0,50) + '...' || "A post", groupId: 'showerthoughts', groupName: MOCK_GROUPS.find(g=>g.id==='showerthoughts')?.name, isAnonymousPost: MOCK_POSTS.find(p=>p.id==='3')?.isAnonymous, postPseudonym: MOCK_POSTS.find(p=>p.id==='3')?.pseudonym } as UserCreatedPostData,
   },
   {
     id: 'act7', userId: MOCK_USER_UID_2, type: 'OTHERS_LIKED_USER_POST',
     timestamp: subtractTime(new Date(MOCK_POSTS.find(p => p.id === '3')?.createdAt || PUBLIC_RELEASE_DATE), -5, 'minutes'), isRead: false,
-    data: { type: 'OTHERS_LIKED_USER_POST', postId: '3', postSnippet: MOCK_POSTS.find(p=>p.id==='3')?.text?.substring(0,50) + '...' || "A post", groupId: 'showerthoughts', groupName: MOCK_GROUPS.find(g=>g.id==='showerthoughts')?.name, actorDisplayName: 'Alice Wonderland', actorPhotoURL: ALL_MOCK_USERS.find(u=>u.userId===MOCK_USER_UID_1)?.photoURL, actorUserId: MOCK_USER_UID_1 } as OthersLikedUserPostData,
+    data: { type: 'OTHERS_LIKED_USER_POST', postId: '3', postSnippet: MOCK_POSTS.find(p=>p.id==='3')?.text?.substring(0,50) + '...' || "A post", groupId: 'showerthoughts', groupName: MOCK_GROUPS.find(g=>g.id==='showerthoughts')?.name, actorDisplayName: 'Alice Wonderland', actorPhotoURL: ALL_MOCK_USERS.find(u=>u.userId===MOCK_USER_UID_1)?.photoURL, actorUserId: MOCK_USER_UID_1, isUserAnonymousPost: MOCK_POSTS.find(p=>p.id==='3')?.isAnonymous, postPseudonym: MOCK_POSTS.find(p=>p.id==='3')?.pseudonym } as OthersLikedUserPostData,
   },
   {
     id: 'act8', userId: MOCK_USER_UID_1, type: 'USER_MENTIONED_IN_COMMENT',
@@ -327,9 +341,9 @@ interface PostsState {
   activityFeed: ActivityItem[];
   chatSessions: ChatSession[];
   messages: Message[];
-  usersForMentions: { id: string, displayName: string, photoURL?: string }[]; // For @mention suggestions
+  usersForMentions: { id: string, displayName: string, photoURL?: string }[]; 
 
-  addPost: (post: Post) => void;
+  addPost: (post: Omit<Post, 'id' | 'createdAt' | 'likes' | 'dislikes' | 'commentsCount' | 'comments' | 'pseudonym'> & { isAnonymous?: boolean }) => void;
   addComment: (postId: string, comment: Omit<Comment, 'id' | 'createdAt' | 'likes' | 'dislikes' | 'replies' | 'pseudonym'>) => void;
   getPostsByGroupId: (groupId: string) => Post[];
   getAllPosts: () => Post[];
@@ -360,32 +374,51 @@ export const usePostsStore = create<PostsState>((set, get) => ({
   messages: MOCK_MESSAGES,
   usersForMentions: ALL_MOCK_USERS.map(u => ({id: u.userId, displayName: u.displayName, photoURL: u.photoURL })).filter(u => u.id !== 'system'),
 
-  addPost: (post) => {
-    const newPostWithGeneratedPseudonym = {
-      ...post,
-      pseudonym: post.pseudonym || generatePseudonym(), 
-      createdAt: post.createdAt || new Date().toISOString(), 
+  addPost: (postData) => {
+    const newPost: Post = {
+      id: crypto.randomUUID(),
+      ...postData,
+      pseudonym: postData.isAnonymous ? generatePseudonym() : (postData.userDisplayName || "User"),
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      dislikes: 0,
       comments: [],
       commentsCount: 0,
     };
     set((state) => {
       const updatedGroups = state.groups.map(group => {
-        if (group.id === newPostWithGeneratedPseudonym.groupId) {
-          return { ...group, postCount: (group.postCount || 0) + 1, memberCount: group.memberCount ? group.memberCount + (newPostWithGeneratedPseudonym.userId && !state.posts.some(p => p.groupId === group.id && p.userId === newPostWithGeneratedPseudonym.userId) ? 1 : 0) : 1 };
+        if (group.id === newPost.groupId) {
+          return { ...group, postCount: (group.postCount || 0) + 1, memberCount: group.memberCount ? group.memberCount + (newPost.userId && !state.posts.some(p => p.groupId === group.id && p.userId === newPost.userId) ? 1 : 0) : 1 };
         }
         return group;
       });
       return { 
-        posts: [newPostWithGeneratedPseudonym, ...state.posts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+        posts: [newPost, ...state.posts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
         groups: updatedGroups.sort((a,b) => a.name.localeCompare(b.name))
       };
     });
+    // Add activity item for post creation
+    if (newPost.userId) {
+        get().addActivityItem({
+            userId: newPost.userId,
+            type: 'USER_CREATED_POST',
+            data: {
+                type: 'USER_CREATED_POST',
+                postId: newPost.id,
+                postSnippet: (newPost.text || "Media post").substring(0, 50) + '...',
+                groupId: newPost.groupId,
+                groupName: newPost.groupName || newPost.groupId,
+                isAnonymousPost: newPost.isAnonymous,
+                postPseudonym: newPost.isAnonymous ? newPost.pseudonym : undefined,
+            }
+        });
+    }
   },
   addComment: (postId, commentData) => {
     const newComment: Comment = {
         ...commentData,
         id: crypto.randomUUID(),
-        pseudonym: generatePseudonym(),
+        pseudonym: commentData.isAnonymous ? generatePseudonym() : (commentData.userDisplayName || "User"),
         createdAt: new Date().toISOString(),
         likes: 0,
         dislikes: 0,
@@ -402,9 +435,9 @@ export const usePostsStore = create<PostsState>((set, get) => ({
     }));
 
     const post = get().posts.find(p => p.id === postId);
-    if(post && post.userId !== commentData.userId) { // Notify post owner
+    if(post && post.userId && post.userId !== commentData.userId) { 
         get().addActivityItem({
-            userId: post.userId!,
+            userId: post.userId,
             type: 'OTHERS_COMMENTED_ON_USER_POST',
             data: {
                 type: 'OTHERS_COMMENTED_ON_USER_POST',
@@ -417,14 +450,16 @@ export const usePostsStore = create<PostsState>((set, get) => ({
                 actorUserId: commentData.userId,
                 actorDisplayName: commentData.userDisplayName,
                 actorPhotoURL: commentData.userPhotoURL,
+                isUserAnonymousPost: post.isAnonymous, // Add if the user's post was anonymous
+                postPseudonym: post.isAnonymous ? post.pseudonym : undefined,
             } as OthersCommentedOnUserPostData,
         });
     }
-    // Handle mentions in the comment
+    
     const mentionedUsernames = (newComment.text.match(/@(\w+)/g) || []).map(m => m.substring(1));
     mentionedUsernames.forEach(username => {
         const mentionedUser = get().usersForMentions.find(u => u.displayName.replace(/\s+/g, '') === username);
-        if (mentionedUser && mentionedUser.id !== commentData.userId) { // Don't notify for self-mention
+        if (mentionedUser && mentionedUser.id !== commentData.userId) { 
             get().addActivityItem({
                 userId: mentionedUser.id,
                 type: 'USER_MENTIONED_IN_COMMENT',
@@ -472,6 +507,8 @@ export const usePostsStore = create<PostsState>((set, get) => ({
             groupId: post.groupId, groupName: post.groupName,
             actorUserId: actingUserId, actorDisplayName: actor?.displayName || generatePseudonym(),
             actorPhotoURL: actor?.photoURL,
+            isUserAnonymousPost: post.isAnonymous, // Add if the user's post was anonymous
+            postPseudonym: post.isAnonymous ? post.pseudonym : undefined,
           } as OthersLikedUserPostData,
         });
       }
@@ -491,7 +528,6 @@ export const usePostsStore = create<PostsState>((set, get) => ({
             return post;
         })
     }));
-    // Optional: Add activity item for comment likes if needed
   },
 
   addGroup: (group) => {
@@ -523,7 +559,6 @@ export const usePostsStore = create<PostsState>((set, get) => ({
   markActivityAsRead: (userId: string, activityId: string) => set((state) => ({ activityFeed: state.activityFeed.map(activity => activity.id === activityId && activity.userId === userId ? { ...activity, isRead: true } : activity ) })),
   markAllActivitiesAsRead: (userId: string) => set((state) => ({ activityFeed: state.activityFeed.map(activity => activity.userId === userId ? { ...activity, isRead: true } : activity ) })),
 
-  // Chat actions
   getChatSessionById: (sessionId: string) => get().chatSessions.find(cs => cs.id === sessionId),
   getChatSessionsForUser: (userId: string) => get().chatSessions.filter(cs => cs.participantIds.includes(userId)).sort((a,b) => new Date(b.lastMessageTimestamp || 0).getTime() - new Date(a.lastMessageTimestamp || 0).getTime()),
   getMessagesForChatSession: (sessionId: string) => get().messages.filter(msg => msg.chatSessionId === sessionId).sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
@@ -545,7 +580,6 @@ export const usePostsStore = create<PostsState>((set, get) => ({
         : cs
       ),
     }));
-    // Potential: Add activity for new message to the other participant(s)
   },
   startOrGetChatSession: (userId1, userId2) => {
     const existingSession = get().chatSessions.find(cs => 
@@ -573,3 +607,4 @@ export const usePostsStore = create<PostsState>((set, get) => ({
   },
   getUserById: (userId: string) => get().usersForMentions.find(u => u.id === userId),
 }));
+

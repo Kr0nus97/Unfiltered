@@ -2,13 +2,13 @@
 "use client";
 
 import React from "react";
-import type { ActivityItem, ActivityItemData, UserCreatedPostData, UserCreatedGroupData, UserPostFlaggedData, OthersLikedUserPostData, OthersCommentedOnUserPostData, UserMentionedInCommentData } from "@/lib/types";
+import type { ActivityItem, UserCreatedPostData } from "@/lib/types";
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, MessageSquare, ThumbsUp, AlertTriangle, FilePlus, Users, UserCircle2, AtSign } from "lucide-react";
+import { Eye, MessageSquare, ThumbsUp, AlertTriangle, FilePlus, Users, UserCircle2, AtSign, Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ActivityItemCardProps {
@@ -47,12 +47,16 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
       <span key="actor" className="font-semibold text-accent">{data.actorDisplayName}</span>
     ) : ( <span key="actor-anon" className="font-semibold text-accent">Someone</span> );
 
-    const createPostLink = (postData: { postId?: string, postSnippet?: string, groupId?: string }) => {
+    const createPostLink = (postData: { postId?: string, postSnippet?: string, groupId?: string, isAnonymousPost?: boolean, postPseudonym?: string }) => {
+      const postText = postData.isAnonymousPost 
+        ? `your anonymous post as "${postData.postPseudonym || 'Anonymous'}"` 
+        : `"${postData.postSnippet || 'your post'}"`;
+      
       return postData.postId && postData.groupId ? (
         <Link key="postlink" href={`/groups/${postData.groupId}/#post-${postData.postId}`} className="font-semibold text-primary hover:underline">
-            "{postData.postSnippet || 'your post'}"
+            {postText}
         </Link>
-      ) : ( <span key="postlink-fallback" className="font-semibold">"{postData.postSnippet || 'a post'}"</span> );
+      ) : ( <span key="postlink-fallback" className="font-semibold">{postText}</span> );
     }
     
     const groupLink = (groupId?: string, groupName?: string) => {
@@ -82,18 +86,29 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
         linkPath = data.groupId ? `/groups/${data.groupId}` : undefined;
         break;
       case 'USER_POST_FLAGGED':
-        messageParts = ["Your post ", createPostLink(data), " in ", groupLink(data.groupId, data.groupName), ` was flagged: "${data.flagReason || 'Community guidelines'}"`];
+        const flaggedPostText = data.isUserAnonymousPost 
+          ? `Your anonymous post as "${data.postPseudonym || 'Anonymous'}"`
+          : `Your post "${data.postSnippet || 'a post'}"`;
+        messageParts = [flaggedPostText, " in ", groupLink(data.groupId, data.groupName), ` was flagged: "${data.flagReason || 'Community guidelines'}"`];
         linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : (data.groupId ? `/groups/${data.groupId}` : undefined);
         break;
       case 'OTHERS_LIKED_USER_POST':
-        messageParts = [actorSpan, " liked ", createPostLink(data), "."];
+        const likedPostText = data.isUserAnonymousPost
+            ? `your anonymous post as "${data.postPseudonym || 'Anonymous'}"`
+            : `"${data.postSnippet || 'your post'}"`;
+        messageParts = [actorSpan, " liked ", likedPostText, "."];
         linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : undefined;
         break;
       case 'OTHERS_COMMENTED_ON_USER_POST':
-        messageParts = [actorSpan, " commented on ", createPostLink(data), ": ", createCommentLink(data)];
+        const commentedOnPostText = data.isUserAnonymousPost
+            ? `your anonymous post as "${data.postPseudonym || 'Anonymous'}"`
+            : `"${data.postSnippet || 'your post'}"`;
+        messageParts = [actorSpan, " commented on ", commentedOnPostText, ": ", createCommentLink(data)];
         linkPath = data.groupId && data.postId && data.commentId ? `/groups/${data.groupId}/#post-${data.postId}-comment-${data.commentId}` : (data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : undefined);
         break;
       case 'USER_MENTIONED_IN_COMMENT':
+        // For mentions, the target post context (isUserAnonymousPost) isn't typically part of this data structure yet,
+        // but could be added if needed. For now, assumes generic post reference.
         messageParts = [actorSpan, " mentioned you in ", createCommentLink(data), " on post ", createPostLink(data), " in ", groupLink(data.groupId, data.groupName), "."];
         linkPath = data.groupId && data.postId && data.commentId ? `/groups/${data.groupId}/#post-${data.postId}-comment-${data.commentId}` : undefined;
         break;
@@ -117,7 +132,10 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
             <div className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-accent" title="Unread"></div>
           )}
           <div className="flex-shrink-0 pt-1">
-            {activity.data.actorPhotoURL ? (
+            {/* Show specific icon for anonymous user actions, otherwise actor's photo or default icon */}
+            {activity.type === 'USER_CREATED_POST' && (activity.data as UserCreatedPostData).isAnonymousPost ? (
+                <Fingerprint className="h-5 w-5 text-primary" />
+            ) : activity.data.actorPhotoURL ? (
                <Avatar className="h-10 w-10">
                 <AvatarImage src={activity.data.actorPhotoURL} alt={activity.data.actorDisplayName || "User"} />
                 <ActorAvatarFallback name={activity.data.actorDisplayName} />
@@ -168,3 +186,4 @@ const BellIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
   </svg>
 );
+

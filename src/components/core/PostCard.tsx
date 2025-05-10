@@ -5,7 +5,7 @@ import type { Post, Comment as CommentType } from "@/lib/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; 
-import { Heart, MessageCircle, Share2, ThumbsDown, ExternalLink, User as UserIcon, SendHorizontal, CornerDownRight, AtSign } from "lucide-react"; 
+import { Heart, MessageCircle, Share2, ThumbsDown, ExternalLink, User as UserIcon, SendHorizontal, CornerDownRight, AtSign, Fingerprint, Ghost } from "lucide-react"; 
 import { formatDistanceToNow } from 'date-fns';
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import Image from "next/image"; 
@@ -18,6 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useUiStore } from "@/store/uiStore";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch"; // Import Switch
+import { Label } from "@/components/ui/label"; // Import Label
 import { cn } from "@/lib/utils";
 import { generatePseudonym } from "@/lib/pseudonyms";
 
@@ -48,6 +50,7 @@ export function PostCard({ post }: PostCardProps) {
 
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const [commentIsAnonymous, setCommentIsAnonymous] = useState(false); // State for comment anonymity
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionSuggestions, setMentionSuggestions] = useState<{ id: string; displayName: string; photoURL?: string }[]>([]);
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
@@ -107,7 +110,7 @@ export function PostCard({ post }: PostCardProps) {
     if (itemType === 'post') {
       setLiked(newLikedState); setDislikes(newDislikedState);
       setLikes(newLikesCount); setDislikes(newDislikesCount);
-      updatePostReactions(postId, newLikesCount, newDislikesCount, user.uid);
+      updatePostReactions(post.id, newLikesCount, newDislikesCount, user.uid); // Changed from postId to post.id
       try { localStorage.setItem(getLocalStorageKey(itemId, 'post'), JSON.stringify({ liked: newLikedState, disliked: newDislikedState })); } catch (e) { console.error(e); }
     } else {
       updateCommentReactions(post.id, itemId, newLikesCount, newDislikesCount, user.uid);
@@ -116,6 +119,10 @@ export function PostCard({ post }: PostCardProps) {
   };
   
   const handleMessageAuthor = () => {
+    if (post.isAnonymous) { // Do not allow messaging anonymous authors
+        toast({ title: "Cannot Message Author", description: "This post was made in UnFiltered mode." });
+        return;
+    }
     if (!user || isGuestMode) {
         toast({ title: "Sign in to message", description: "Please sign in with Google to send messages.", action: <ToastAction altText="Sign In" onClick={signInWithGoogle}>Sign In</ToastAction> });
         return;
@@ -146,8 +153,7 @@ export function PostCard({ post }: PostCardProps) {
 
   const handleMentionSelect = (selectedUser: { id: string; displayName: string }) => {
     const words = commentText.split(/\s+/);
-    words.pop(); // Remove the partial @mention
-    // Replace spaces in display name for the mention tag, but store ID for actual linking
+    words.pop(); 
     const mentionTag = `@${selectedUser.displayName.replace(/\s+/g, "")}`; 
     setCommentText(words.join(" ") + (words.length > 0 ? " " : "") + mentionTag + " ");
     setMentionSuggestions([]);
@@ -166,7 +172,7 @@ export function PostCard({ post }: PostCardProps) {
   };
   
   const submitComment = () => {
-    if (!commentText.trim() || !user) return;
+    if (!commentText.trim() || !user) return; // User must be logged in to submit
     
     addCommentStore(post.id, {
         postId: post.id,
@@ -174,16 +180,17 @@ export function PostCard({ post }: PostCardProps) {
         userDisplayName: user.displayName || "Anonymous User",
         userPhotoURL: user.photoURL || undefined,
         text: commentText,
+        isAnonymous: commentIsAnonymous, // Pass the anonymity state
         // Mentions will be processed in store based on text content
     });
     setCommentText("");
     setShowCommentInput(false);
     setMentionSuggestions([]);
+    setCommentIsAnonymous(false); // Reset comment anonymity toggle
   };
 
 
   const renderComment = (comment: CommentType) => {
-    // Simplified reaction state for comments, ideally also from local storage per comment
     let commentLiked = false;
     let commentDisliked = false;
     if (user && !isGuestMode) {
@@ -196,37 +203,42 @@ export function PostCard({ post }: PostCardProps) {
     }
 
     const commentTimeAgo = formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true });
+    const commentAuthorName = comment.isAnonymous ? comment.pseudonym : comment.userDisplayName;
+    const commentAuthorAvatar = comment.isAnonymous ? null : comment.userPhotoURL;
+    const commentAvatarFallback = comment.isAnonymous ? <Ghost className="h-full w-full text-muted-foreground"/> : comment.userDisplayName.charAt(0).toUpperCase();
+
 
     return (
       <div key={comment.id} className="mt-3 pt-3 border-t border-border/50">
         <div className="flex items-start space-x-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={comment.userPhotoURL} alt={comment.userDisplayName} />
-            <AvatarFallback>{comment.userDisplayName.charAt(0)}</AvatarFallback>
+            {commentAuthorAvatar && <AvatarImage src={commentAuthorAvatar} alt={commentAuthorName} />}
+            <AvatarFallback>{commentAvatarFallback}</AvatarFallback>
           </Avatar>
           <div className="flex-grow">
             <div className="flex items-center space-x-2">
-              <span className="font-semibold text-sm text-foreground">{comment.userDisplayName}</span>
-              <span className="text-xs text-muted-foreground">({comment.pseudonym})</span>
+              <span className="font-semibold text-sm text-foreground">{commentAuthorName}</span>
+              {!comment.isAnonymous && <span className="text-xs text-muted-foreground">({comment.pseudonym})</span>}
               <span className="text-xs text-muted-foreground">&middot; {commentTimeAgo}</span>
             </div>
             <MarkdownRenderer className="text-sm text-card-foreground py-1">
               {comment.text.replace(/@(\w+)/g, (match, username) => {
                 const mentionedUser = usersForMentions.find(u => u.displayName.replace(/\s+/g, '') === username);
+                // Mentions should link to actual user profiles if found, regardless of comment anonymity.
                 if (mentionedUser) {
-                  return `[@${username}](/account/${mentionedUser.id})`; // Markdown link
+                  return `[@${username}](/account/${mentionedUser.id})`; 
                 }
-                return match; // Return original if no user found (e.g. @notarealuser)
+                return match; 
               })}
             </MarkdownRenderer>
             <div className="flex items-center space-x-2 mt-1">
-              <Button variant="ghost" size="xs" onClick={() => handleInteraction('like', comment.id, 'comment')} className={`flex items-center space-x-1 ${commentLiked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`}>
+              <Button variant="ghost" size="xs" onClick={() => handleInteraction('like', comment.id, 'comment')} className={`flex items-center space-x-1 ${commentLiked ? 'text-accent' : 'text-muted-foreground hover:text-accent'}`} disabled={!canInteract}>
                 <Heart className={`h-3 w-3 ${commentLiked ? 'fill-current' : ''}`} /> <span className="text-xs">{comment.likes}</span>
               </Button>
-              <Button variant="ghost" size="xs" onClick={() => handleInteraction('dislike', comment.id, 'comment')} className={`flex items-center space-x-1 ${commentDisliked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`}>
+              <Button variant="ghost" size="xs" onClick={() => handleInteraction('dislike', comment.id, 'comment')} className={`flex items-center space-x-1 ${commentDisliked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`} disabled={!canInteract}>
                 <ThumbsDown className={`h-3 w-3 ${commentDisliked ? 'fill-current' : ''}`} /> <span className="text-xs">{comment.dislikes}</span>
               </Button>
-              <Button variant="ghost" size="xs" className="text-muted-foreground hover:text-accent" onClick={() => handleReplyToComment(comment.userDisplayName)}>
+              <Button variant="ghost" size="xs" className="text-muted-foreground hover:text-accent" onClick={() => handleReplyToComment(comment.userDisplayName)} disabled={!canInteract}>
                 <CornerDownRight className="h-3 w-3 mr-1" /> <span className="text-xs">Reply</span>
               </Button>
             </div>
@@ -237,18 +249,20 @@ export function PostCard({ post }: PostCardProps) {
   };
 
 
-  const displayName = post.userDisplayName || post.pseudonym;
-  const avatarInitial = displayName?.substring(0, 1).toUpperCase();
-  const avatarImageSrc = post.userPhotoURL;
+  const displayName = post.isAnonymous ? post.pseudonym : (post.userDisplayName || post.pseudonym);
+  const avatarImageSrc = post.isAnonymous ? undefined : post.userPhotoURL;
+  const avatarFallbackContent = post.isAnonymous ? <Fingerprint className="h-5 w-5 text-primary-foreground" /> : (displayName?.substring(0, 1).toUpperCase() || <UserIcon />);
+  
   const canInteract = !!user && !isGuestMode;
-  const { postId } = post; // Ensure postId is available for interactions
 
   return (
     <Card className="mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300" id={`post-${post.id}`}>
       <CardHeader className="flex flex-row items-center space-x-3 pb-3">
-        <Avatar className="h-10 w-10">
-          {avatarImageSrc ? (<AvatarImage src={avatarImageSrc} alt={displayName || "User avatar"} />) : null}
-          <AvatarFallback className={avatarImageSrc ? '' : 'bg-primary text-primary-foreground'}>{avatarInitial || <UserIcon />}</AvatarFallback>
+        <Avatar className={cn("h-10 w-10", post.isAnonymous && "bg-primary")}>
+          {avatarImageSrc && <AvatarImage src={avatarImageSrc} alt={displayName || "User avatar"} />}
+          <AvatarFallback className={cn(post.isAnonymous && "bg-primary text-primary-foreground")}>
+            {avatarFallbackContent}
+          </AvatarFallback>
         </Avatar>
         <div>
           <CardTitle className="text-lg font-semibold text-card-foreground">{displayName}</CardTitle>
@@ -285,7 +299,7 @@ export function PostCard({ post }: PostCardProps) {
                 </Button>
             </div>
             <div className="flex space-x-1">
-                {post.userId && post.userId !== user?.uid && ( // Show message button if post author is not current user
+                {!post.isAnonymous && post.userId && post.userId !== user?.uid && ( 
                   <Button variant="ghost" size="sm" onClick={handleMessageAuthor} className="text-muted-foreground hover:text-accent" title="Message author" disabled={!canInteract}>
                     <SendHorizontal className="h-5 w-5"/>
                   </Button>
@@ -295,7 +309,7 @@ export function PostCard({ post }: PostCardProps) {
                 </Button>
             </div>
         </div>
-        {/* Comments Section */}
+        
         <div className="w-full mt-3">
             {post.comments && post.comments.length > 0 && (
                 <div className="space-y-2 mb-3">
@@ -320,7 +334,7 @@ export function PostCard({ post }: PostCardProps) {
                         onChange={handleCommentInputChange}
                         className="w-full text-sm"
                         rows={2}
-                        disabled={!canInteract}
+                        disabled={!canInteract} // Disable if not logged in or guest
                     />
                     {mentionSuggestions.length > 0 && (
                         <Card className="absolute z-10 w-full mt-1 border bg-card shadow-lg max-h-40 overflow-y-auto">
@@ -340,11 +354,26 @@ export function PostCard({ post }: PostCardProps) {
                         ))}
                         </Card>
                     )}
-                     <div className="mt-2 flex justify-end">
-                        <Button size="sm" onClick={submitComment} disabled={!commentText.trim() || !canInteract} className="bg-accent text-accent-foreground hover:bg-accent/80">
-                            Post Comment
-                        </Button>
-                    </div>
+                    {canInteract && ( // Show UnFiltered toggle and submit button only if canInteract
+                        <>
+                            <div className="flex items-center space-x-2 mt-2">
+                                <Switch
+                                    id={`comment-anonymous-switch-${post.id}`}
+                                    checked={commentIsAnonymous}
+                                    onCheckedChange={setCommentIsAnonymous}
+                                    aria-label="Comment in UnFiltered Mode"
+                                />
+                                <Label htmlFor={`comment-anonymous-switch-${post.id}`} className="text-xs flex items-center">
+                                    <Fingerprint className="h-3 w-3 mr-1 text-primary" /> UnFiltered Mode
+                                </Label>
+                            </div>
+                            <div className="mt-2 flex justify-end">
+                                <Button size="sm" onClick={submitComment} className="bg-accent text-accent-foreground hover:bg-accent/80">
+                                    {commentIsAnonymous ? "Comment Anonymously" : "Post Comment"}
+                                </Button>
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
              {!canInteract && (showCommentInput || (post.comments && post.comments.length === 0)) && (
@@ -357,3 +386,4 @@ export function PostCard({ post }: PostCardProps) {
     </Card>
   );
 }
+
