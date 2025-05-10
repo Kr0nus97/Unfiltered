@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import type { 
     Post, 
@@ -24,9 +25,13 @@ export const MOCK_GROUPS: Group[] = [
   { id: 'gaming', name: 'Game Central', description: 'Everything about video games, from retro to modern.', postCount: 765, memberCount: 8800, creatorId: MOCK_USER_UID_2, backgroundImageUrl: 'https://picsum.photos/seed/gaminggroup/600/300' },
   { id: 'showerthoughts', name: 'Shower Thoughts', description: 'Those profound or silly thoughts you have in the shower.', postCount: 1023, memberCount: 12000, creatorId: 'system' },
   { id: 'foodies', name: 'Food Lovers', description: 'Share recipes, restaurant reviews, and culinary adventures.', postCount: 340, memberCount: 4500, creatorId: MOCK_USER_UID_1, backgroundImageUrl: 'https://picsum.photos/seed/foodiesgroup/600/300' },
-  { id: 'books', name: 'Bookworms Corner', description: 'Discuss your favorite books, authors, and genres.', postCount: 210, memberCount: 3200, creatorId: 'system' },
+  { id: 'books', name: 'Bookworms Corner', description: 'Discuss your favorite books, authors, and genres.', postCount: 210, memberCount: 3200, creatorId: 'system', backgroundImageUrl: 'https://picsum.photos/seed/booksgroup/600/300' },
   { id: 'music', name: 'Music Hub', description: 'Share and discover new music, artists, and genres.', postCount: 180, memberCount: 2800, creatorId: 'system' },
-  { id: 'videos', name: 'Video Vibes', description: 'Interesting videos, short films, and discussions.', postCount: 95, memberCount: 1500, creatorId: 'system' },
+  { id: 'videos', name: 'Video Vibes', description: 'Interesting videos, short films, and discussions.', postCount: 95, memberCount: 1500, creatorId: 'system', backgroundImageUrl: 'https://picsum.photos/seed/videosgroup/600/300' },
+  { id: 'photography', name: 'Photography Club', description: 'Share your best shots, techniques, and gear talk.', postCount: 120, memberCount: 1800, creatorId: MOCK_USER_UID_2, backgroundImageUrl: 'https://picsum.photos/seed/photography/600/300' },
+  { id: 'travel', name: 'Wanderlust Tales', description: 'Travel stories, tips, and destination guides.', postCount: 250, memberCount: 3500, creatorId: 'system' },
+  { id: 'science', name: 'Science Wonders', description: 'Exploring the marvels of science and discovery.', postCount: 190, memberCount: 2900, creatorId: MOCK_USER_UID_1, backgroundImageUrl: 'https://picsum.photos/seed/science/600/300' },
+  { id: 'diy', name: 'DIY & Crafts', description: 'Creative projects, tutorials, and handmade items.', postCount: 88, memberCount: 1250, creatorId: 'system' },
 ];
 
 const BASE_DATE = new Date('2024-07-15T12:00:00.000Z');
@@ -122,7 +127,7 @@ const MOCK_POSTS: Post[] = [
     createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 3).toISOString(), 
     likes: 50,
     dislikes: 1,
-    commentsCount: 9,
+    commentsCount: 0, // Changed to 0 for testing placeholder
     userId: MOCK_USER_UID_1,
   },
   {
@@ -163,6 +168,72 @@ const MOCK_POSTS: Post[] = [
     dislikes: 3,
     commentsCount: 11,
     userId: MOCK_USER_UID_1,
+  },
+  {
+    id: '11',
+    groupId: 'photography',
+    groupName: 'Photography Club',
+    pseudonym: "Shutter_Sorcerer",
+    text: "Captured this stunning sunset over the mountains last night. #nofilter",
+    imageUrl: 'https://picsum.photos/seed/sunsetphoto/700/450',
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 6).toISOString(),
+    likes: 95,
+    dislikes: 2,
+    commentsCount: 10,
+    userId: MOCK_USER_UID_2,
+  },
+  {
+    id: '12',
+    groupId: 'travel',
+    groupName: 'Wanderlust Tales',
+    pseudonym: "Nomad_Navigator",
+    text: "Just got back from a backpacking trip through Southeast Asia. AMA!",
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 48).toISOString(),
+    likes: 120,
+    dislikes: 4,
+    commentsCount: 25,
+    userId: 'another-user-uid-3',
+  },
+  {
+    id: '13',
+    groupId: 'science',
+    groupName: 'Science Wonders',
+    pseudonym: "Quantum_Quill",
+    text: "Mind-boggling discovery about black hole thermodynamics published today. Link to the paper: [ArXiv](https://arxiv.org/)",
+    linkUrl: "https://arxiv.org/",
+    linkTitle: "Black Hole Thermodynamics Paper",
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 120).toISOString(),
+    likes: 72,
+    dislikes: 1,
+    commentsCount: 8,
+    userId: MOCK_USER_UID_1,
+  },
+  {
+    id: '14',
+    groupId: 'diy',
+    groupName: 'DIY & Crafts',
+    pseudonym: "Crafty_Creator",
+    text: "My latest weekend project: a hand-knitted scarf. What do you think?",
+    imageUrl: 'https://picsum.photos/seed/diyscarf/500/500',
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 10).toISOString(),
+    likes: 40,
+    dislikes: 0,
+    commentsCount: 0, // For testing no comments placeholder
+    userId: MOCK_USER_UID_2,
+    userDisplayName: "Crafty Person",
+    userPhotoURL: "https://picsum.photos/seed/user3/40/40",
+  },
+  {
+    id: '15',
+    groupId: 'tech',
+    groupName: 'Technology Talk',
+    pseudonym: "Code_Comet",
+    text: "Debating switching to a new code editor. VSCode vs Sublime vs Neovim - what are your preferences and why?",
+    createdAt: new Date(BASE_DATE.getTime() - 1000 * 60 * 180).toISOString(),
+    likes: 25,
+    dislikes: 0,
+    commentsCount: 17,
+    userId: 'another-user-uid-4',
   },
 ];
 
@@ -339,7 +410,7 @@ export const usePostsStore = create<PostsState>((set, get) => ({
       memberCount: group.memberCount || 1,
     };
     set((state) => ({
-      groups: [newGroupWithDefaults, ...state.groups],
+      groups: [newGroupWithDefaults, ...state.groups].sort((a,b) => a.name.localeCompare(b.name)), // Sort groups by name
     }));
      // Add activity item for group creation
      if (group.creatorId) {
@@ -350,8 +421,8 @@ export const usePostsStore = create<PostsState>((set, get) => ({
           type: 'USER_CREATED_GROUP',
           groupId: newGroupWithDefaults.id,
           groupName: newGroupWithDefaults.name,
-          creatorId: group.creatorId
-        } as UserCreatedGroupData,
+          // actorUserId and other actor fields can be omitted if it's the user's own action
+        } as UserCreatedGroupData, // Cast to specific type
       });
     }
   },
@@ -360,7 +431,7 @@ export const usePostsStore = create<PostsState>((set, get) => ({
     const newActivity: ActivityItem = {
       id: crypto.randomUUID(),
       userId: itemDetails.userId,
-      type: itemDetails.type, // This should align with itemDetails.data.type
+      type: itemDetails.type, // This will be used as the discriminator
       timestamp: new Date().toISOString(),
       isRead: false,
       data: itemDetails.data, // Already a discriminated union
@@ -393,4 +464,10 @@ export const usePostsStore = create<PostsState>((set, get) => ({
       ),
     }));
   },
+}));
+
+// Ensure initial groups are sorted
+usePostsStore.setState(state => ({
+    ...state,
+    groups: state.groups.sort((a,b) => a.name.localeCompare(b.name))
 }));

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Post } from "@/lib/types";
@@ -235,11 +236,17 @@ export function PostCard({ post }: PostCardProps) {
             <ThumbsDown className={`h-5 w-5 ${canInteract && disliked ? 'fill-current' : ''}`} /> <span>{dislikes}</span>
           </Button>
         </div>
-        <div className="flex space-x-2">
-           {/* Comments button remains viewable by guests */}
-           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-            <MessageCircle className="h-5 w-5 mr-1" /> {post.commentsCount}
-          </Button>
+        <div className="flex space-x-2 items-center">
+           {/* Comments button and placeholder */}
+           {post.commentsCount > 0 ? (
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <MessageCircle className="h-5 w-5 mr-1" /> {post.commentsCount}
+            </Button>
+           ) : (
+            <div className="flex items-center text-xs text-muted-foreground italic">
+              <MessageCircle className="h-4 w-4 mr-1.5" /> No comments yet.
+            </div>
+           )}
           {/* Share button remains viewable and usable by guests */}
           <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
             <Share2 className="h-5 w-5" />
@@ -249,3 +256,4 @@ export function PostCard({ post }: PostCardProps) {
     </Card>
   );
 }
+
