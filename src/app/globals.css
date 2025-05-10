@@ -20,7 +20,7 @@
     --secondary-foreground: 231 62% 29%; /* Deep Blue for text on secondary */
 
     --muted: 220 20% 88%; /* Muted gray */
-    --muted-foreground: 220 15% 50%; /* Medium gray text for muted */
+    --muted-foreground: 220 20% 40%; /* Medium-Dark gray text for muted (adjusted for better readability) */
 
     --accent: 174 60% 37%; /* Teal (#26a69a) */
     --accent-foreground: 0 0% 100%; /* White */
