@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, User } from "lucide-react";
 import { useUiStore } from "@/store/uiStore";
 import { useAuth } from "@/context/AuthContext"; 
+import { cn } from "@/lib/utils";
 
 export default function AppHeader() {
   const openCreatePostDialog = useUiStore(state => state.openCreatePostDialog);
@@ -21,7 +22,10 @@ export default function AppHeader() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <Button
             variant="default"
-            className="hidden md:inline-flex bg-accent text-accent-foreground hover:bg-accent/90"
+            className={cn(
+                "hidden md:inline-flex bg-accent text-accent-foreground hover:bg-accent/90",
+                isGuestMode && "opacity-70" // Apply reduced opacity for guests
+            )}
             onClick={() => openCreatePostDialog()}
             // Button is not disabled here. Dialog will handle auth check and guest mode.
             // It's fine for guests to click it and see the prompt.

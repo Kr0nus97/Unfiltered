@@ -50,7 +50,10 @@ export default function BottomNavigationBar({ openCreatePostDialog }: BottomNavi
         {/* Central Floating Action Button for POST */}
         <Button
           variant="default"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg transform -translate-y-5 flex flex-col items-center justify-center p-2"
+          className={cn(
+            "bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-16 h-16 shadow-lg transform -translate-y-5 flex flex-col items-center justify-center p-2",
+            isGuestMode && "opacity-70" // Apply reduced opacity for guests
+          )}
           onClick={() => openCreatePostDialog()} 
           aria-label="Create Post"
           // Button is not disabled here. Dialog will handle auth check and guest mode.

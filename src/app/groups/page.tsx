@@ -8,14 +8,15 @@ import { usePostsStore } from "@/store/postsStore";
 import { useUiStore } from "@/store/uiStore";
 import { Group } from "@/lib/types";
 import { useState, useEffect, useMemo } from "react";
-import { Search, PlusCircle } from "lucide-react";
+import { Search, PlusCircle, LogIn } from "lucide-react"; // Added LogIn
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
+import { cn } from "@/lib/utils";
 
 export default function GroupsPage() {
   const allGroups = usePostsStore(state => state.groups);
   const openCreateGroupDialog = useUiStore(state => state.openCreateGroupDialog);
-  const { user, isGuestMode, loading: authLoading } = useAuth();
+  const { user, isGuestMode, loading: authLoading, signInWithGoogle } = useAuth(); // Added signInWithGoogle
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -69,7 +70,10 @@ export default function GroupsPage() {
         <h1 className="text-3xl font-bold text-primary mb-4 sm:mb-0">Discover Groups</h1>
         <Button 
           onClick={openCreateGroupDialog} 
-          className="bg-accent text-accent-foreground hover:bg-accent/90 w-full sm:w-auto"
+          className={cn(
+            "bg-accent text-accent-foreground hover:bg-accent/90 w-full sm:w-auto",
+            isGuestMode && "opacity-70"
+          )}
           // Button is not disabled here; dialog will handle auth/guest check
         >
           <PlusCircle className="mr-2 h-5 w-5" /> Create New Group
@@ -100,18 +104,22 @@ export default function GroupsPage() {
             {searchTerm ? "Try a different search term or " : ""}
             {!user || isGuestMode ? "Sign in to create a group." : "Why not create the first one?"}
           </p>
-          {(!user || isGuestMode) && !searchTerm && (
+          {(!user || isGuestMode) && !searchTerm && ( // Handling for guests or not signed in users when no search term
              <Button 
               onClick={() => { 
-                if (isGuestMode) openCreateGroupDialog(); // Will show guest prompt in dialog
-                else signInWithGoogle(); // If not guest and not user, means needs to sign in
+                // If guest, dialog will prompt. If not logged in at all, prompt to sign in.
+                if (isGuestMode) openCreateGroupDialog(); 
+                else signInWithGoogle(); 
               }} 
-              className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground"
+              className={cn(
+                "mt-6 bg-accent hover:bg-accent/90 text-accent-foreground",
+                isGuestMode && "opacity-70" // Also apply opacity here if desired for guest
+              )}
              >
               <LogIn className="mr-2 h-5 w-5" /> Sign In to Create a Group
             </Button>
           )}
-           {(user && !isGuestMode) && !searchTerm && (
+           {(user && !isGuestMode) && !searchTerm && ( // For logged-in users when no search term
              <Button 
               onClick={openCreateGroupDialog} 
               className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground"

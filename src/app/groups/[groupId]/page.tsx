@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext"; 
+import { cn } from "@/lib/utils";
 
 export default function GroupPage() {
   const params = useParams();
@@ -103,7 +104,10 @@ export default function GroupPage() {
             variant="outline" 
             size="sm" 
             onClick={handleOpenCreatePostInGroup} 
-            className="ml-4 hidden md:inline-flex border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+            className={cn(
+                "ml-4 hidden md:inline-flex border-accent text-accent hover:bg-accent hover:text-accent-foreground",
+                isGuestMode && "opacity-70"
+            )}
             // Button not disabled; dialog handles auth/guest state
           >
             <Edit3 className="mr-2 h-4 w-4" /> Post to Group
@@ -118,7 +122,10 @@ export default function GroupPage() {
             variant="default" 
             size="lg" 
             onClick={handleOpenCreatePostInGroup} 
-            className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+            className={cn(
+                "w-full bg-accent hover:bg-accent/90 text-accent-foreground",
+                isGuestMode && "opacity-70"
+            )}
             // Button not disabled; dialog handles auth/guest state
           >
             <Edit3 className="mr-2 h-5 w-5" /> Post to {group.name}
@@ -136,7 +143,10 @@ export default function GroupPage() {
           <p className="text-muted-foreground mt-2">Why not be the first to share something?</p>
           <Button 
             onClick={handleOpenCreatePostInGroup} 
-            className="mt-6 bg-accent hover:bg-accent/90 text-accent-foreground hidden md:inline-flex"
+            className={cn(
+                "mt-6 bg-accent hover:bg-accent/90 text-accent-foreground hidden md:inline-flex",
+                isGuestMode && "opacity-70"
+            )}
             // Button not disabled; dialog handles auth/guest state
           >
              Create First Post
