@@ -262,7 +262,18 @@ export const usePostsStore = create<PostsState>((set, get) => ({
       pseudonym: post.pseudonym || generatePseudonym(), 
       createdAt: post.createdAt || new Date().toISOString(), 
     };
-    set((state) => ({ posts: [newPostWithGeneratedPseudonym, ...state.posts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) }));
+    set((state) => {
+      const updatedGroups = state.groups.map(group => {
+        if (group.id === newPostWithGeneratedPseudonym.groupId) {
+          return { ...group, postCount: (group.postCount || 0) + 1 };
+        }
+        return group;
+      });
+      return { 
+        posts: [newPostWithGeneratedPseudonym, ...state.posts].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+        groups: updatedGroups 
+      };
+    });
   },
   getPostsByGroupId: (groupId) => get().posts.filter(post => post.groupId === groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   getAllPosts: () => get().posts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
@@ -280,9 +291,14 @@ export const usePostsStore = create<PostsState>((set, get) => ({
 
     // If an actingUser exists and is not the post owner, create activity for post owner
     if (actingUserId && post.userId && actingUserId !== post.userId) {
-      const actor = get().posts.find(p => p.userId === actingUserId) || { displayName: generatePseudonym(), photoURL: `https://picsum.photos/seed/${actingUserId}/40/40`}; // Simplification for mock
+      // Try to find actor details from existing posts, or use a default
+      const actorPost = get().posts.find(p => p.userId === actingUserId);
+      const actorDisplayName = actorPost?.userDisplayName || 'An anonymous user';
+      const actorPhotoURL = actorPost?.userPhotoURL || `https://picsum.photos/seed/${actingUserId}/40/40`;
+
+
       const liked = newLikes > post.likes;
-      const disliked = newDislikes > post.dislikes;
+      // const disliked = newDislikes > post.dislikes; // not used for now
 
       if (liked) {
         get().addActivityItem({
@@ -294,8 +310,8 @@ export const usePostsStore = create<PostsState>((set, get) => ({
             groupId: post.groupId,
             groupName: post.groupName,
             actorUserId: actingUserId,
-            actorDisplayName: actor.userDisplayName || 'An anonymous user',
-            actorPhotoURL: actor.userPhotoURL,
+            actorDisplayName: actorDisplayName,
+            actorPhotoURL: actorPhotoURL,
           },
         });
       }
@@ -354,3 +370,4 @@ export const usePostsStore = create<PostsState>((set, get) => ({
     }));
   },
 }));
+
