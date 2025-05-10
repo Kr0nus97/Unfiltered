@@ -1,13 +1,14 @@
+
 "use client";
 
 import React from "react";
-import type { ActivityItem, ActivityItemData, UserCreatedPostData, UserCreatedGroupData, UserPostFlaggedData, OthersLikedUserPostData, OthersCommentedOnUserPostData } from "@/lib/types";
+import type { ActivityItem, ActivityItemData, UserCreatedPostData, UserCreatedGroupData, UserPostFlaggedData, OthersLikedUserPostData, OthersCommentedOnUserPostData, UserMentionedInCommentData } from "@/lib/types";
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, MessageSquare, ThumbsUp, AlertTriangle, FilePlus, Users, UserCircle2 } from "lucide-react";
+import { Eye, MessageSquare, ThumbsUp, AlertTriangle, FilePlus, Users, UserCircle2, AtSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ActivityItemCardProps {
@@ -20,18 +21,13 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
 
   const getIcon = () => {
     switch (activity.type) {
-      case 'USER_CREATED_POST':
-        return <FilePlus className="h-5 w-5 text-blue-500" />;
-      case 'USER_CREATED_GROUP':
-        return <Users className="h-5 w-5 text-green-500" />;
-      case 'USER_POST_FLAGGED':
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case 'OTHERS_LIKED_USER_POST':
-        return <ThumbsUp className="h-5 w-5 text-pink-500" />;
-      case 'OTHERS_COMMENTED_ON_USER_POST':
-        return <MessageSquare className="h-5 w-5 text-purple-500" />;
+      case 'USER_CREATED_POST': return <FilePlus className="h-5 w-5 text-blue-500" />;
+      case 'USER_CREATED_GROUP': return <Users className="h-5 w-5 text-green-500" />;
+      case 'USER_POST_FLAGGED': return <AlertTriangle className="h-5 w-5 text-red-500" />;
+      case 'OTHERS_LIKED_USER_POST': return <ThumbsUp className="h-5 w-5 text-pink-500" />;
+      case 'OTHERS_COMMENTED_ON_USER_POST': return <MessageSquare className="h-5 w-5 text-purple-500" />;
+      case 'USER_MENTIONED_IN_COMMENT': return <AtSign className="h-5 w-5 text-teal-500" />;
       default:
-        // Fallback icon - using a type assertion to satisfy TypeScript
         const _exhaustiveCheck: never = activity.type;
         return <BellIcon className="h-5 w-5 text-gray-500" />;
     }
@@ -43,47 +39,50 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
   };
 
   const renderMessage = () => {
-    const { data } = activity; // data is now ActivityItemData (discriminated union)
+    const { data } = activity; 
     let messageParts: (string | JSX.Element)[] = [];
     let linkPath: string | undefined = undefined;
 
     const actorSpan = data.actorDisplayName ? (
       <span key="actor" className="font-semibold text-accent">{data.actorDisplayName}</span>
-    ) : (
-      <span key="actor-anon" className="font-semibold text-accent">Someone</span>
-    );
+    ) : ( <span key="actor-anon" className="font-semibold text-accent">Someone</span> );
 
-    // Helper function to create post link, checking if data has postId
     const createPostLink = (postData: { postId?: string, postSnippet?: string, groupId?: string }) => {
-      return postData.postId ? (
+      return postData.postId && postData.groupId ? (
         <Link key="postlink" href={`/groups/${postData.groupId}/#post-${postData.postId}`} className="font-semibold text-primary hover:underline">
             "{postData.postSnippet || 'your post'}"
         </Link>
-      ) : (
-          <span key="postlink-fallback" className="font-semibold">"{postData.postSnippet || 'a post'}"</span>
-      );
+      ) : ( <span key="postlink-fallback" className="font-semibold">"{postData.postSnippet || 'a post'}"</span> );
     }
     
-    const groupLink = data.groupId ? (
-         <Link key="grouplink" href={`/groups/${data.groupId}`} className="font-semibold text-primary hover:underline">
-            {data.groupName || 'a group'}
+    const groupLink = (groupId?: string, groupName?: string) => {
+        return groupId ? (
+            <Link key="grouplink" href={`/groups/${groupId}`} className="font-semibold text-primary hover:underline">
+                {groupName || 'a group'}
+            </Link>
+        ) : ( <span key="grouplink-fallback" className="font-semibold">{groupName || 'a group'}</span> );
+    }
+
+    const createCommentLink = (commentData: { postId?: string, commentId?: string, commentSnippet?: string, groupId?: string }) => {
+      return commentData.postId && commentData.groupId && commentData.commentId ? (
+        <Link key="commentlink" href={`/groups/${commentData.groupId}/#post-${commentData.postId}-comment-${commentData.commentId}`} className="font-semibold text-primary hover:underline">
+            "{commentData.commentSnippet || 'their comment'}"
         </Link>
-    ) : (
-        <span key="grouplink-fallback" className="font-semibold">{data.groupName || 'a group'}</span>
-    );
+      ) : ( <span key="commentlink-fallback" className="font-semibold">"{commentData.commentSnippet || 'a comment'}"</span> );
+    }
 
 
-    switch (data.type) { // Discriminate based on data.type
+    switch (data.type) { 
       case 'USER_CREATED_POST':
-        messageParts = ["You created ", createPostLink(data), " in ", groupLink, "."];
+        messageParts = ["You created ", createPostLink(data), " in ", groupLink(data.groupId, data.groupName), "."];
         linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : (data.groupId ? `/groups/${data.groupId}` : undefined);
         break;
       case 'USER_CREATED_GROUP':
-        messageParts = ["You created the group ", groupLink, "."];
+        messageParts = ["You created the group ", groupLink(data.groupId, data.groupName), "."];
         linkPath = data.groupId ? `/groups/${data.groupId}` : undefined;
         break;
       case 'USER_POST_FLAGGED':
-        messageParts = ["Your post ", createPostLink(data), " in ", groupLink, ` was flagged: "${data.flagReason || 'Community guidelines'}"`];
+        messageParts = ["Your post ", createPostLink(data), " in ", groupLink(data.groupId, data.groupName), ` was flagged: "${data.flagReason || 'Community guidelines'}"`];
         linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : (data.groupId ? `/groups/${data.groupId}` : undefined);
         break;
       case 'OTHERS_LIKED_USER_POST':
@@ -91,11 +90,14 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
         linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : undefined;
         break;
       case 'OTHERS_COMMENTED_ON_USER_POST':
-        messageParts = [actorSpan, " commented on ", createPostLink(data), `: "${data.commentSnippet || '...'}"`];
-        linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : undefined;
+        messageParts = [actorSpan, " commented on ", createPostLink(data), ": ", createCommentLink(data)];
+        linkPath = data.groupId && data.postId && data.commentId ? `/groups/${data.groupId}/#post-${data.postId}-comment-${data.commentId}` : (data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : undefined);
+        break;
+      case 'USER_MENTIONED_IN_COMMENT':
+        messageParts = [actorSpan, " mentioned you in ", createCommentLink(data), " on post ", createPostLink(data), " in ", groupLink(data.groupId, data.groupName), "."];
+        linkPath = data.groupId && data.postId && data.commentId ? `/groups/${data.groupId}/#post-${data.postId}-comment-${data.commentId}` : undefined;
         break;
       default:
-         // Fallback for unhandled types, though should not happen with discriminated union
         const _exhaustiveCheck: never = data; 
         messageParts = ["New notification."];
     }

@@ -1,3 +1,4 @@
+
 export interface Group {
   id: string;
   name: string;
@@ -22,13 +23,30 @@ export interface Post {
   createdAt: string; // ISO string date
   likes: number;
   dislikes: number;
-  commentsCount: number;
+  commentsCount: number; // Represents the number of top-level comments
+  comments?: Comment[]; // Optional: array of comments directly on the post
   isFlagged?: boolean;
   flagReason?: string;
   userId?: string; // Firebase UID of the user who created the post
   userDisplayName?: string; // Optional: Display name of the user
   userPhotoURL?: string; // Optional: Photo URL of the user
 }
+
+export interface Comment {
+  id: string;
+  postId: string;
+  userId: string;
+  userDisplayName: string;
+  userPhotoURL?: string;
+  pseudonym: string; // Pseudonym for the comment
+  text: string;
+  createdAt: string; // ISO string
+  likes: number;
+  dislikes: number;
+  replies?: Comment[]; // Nested replies
+  mentions?: string[]; // Array of user IDs mentioned
+}
+
 
 export const ADJECTIVES = [
   "Agile", "Ancient", "Arctic", "Awesome", "Brave", "Bright", "Bronze", "Calm", "Candid", "Clever", 
@@ -254,12 +272,37 @@ export const NOUNS = [
 ] as const;
 export type Noun = typeof NOUNS[number];
 
+
+export interface Message {
+  id: string;
+  chatSessionId: string;
+  senderId: string; // Firebase UID
+  senderPseudonym: string; // Dynamic pseudonym for this message in this chat
+  text: string;
+  createdAt: string; // ISO string
+  postIdContext?: string; // Optional: ID of the post this message refers to
+}
+
+export interface ChatSession {
+  id: string;
+  participantIds: string[]; // Array of Firebase UIDs
+  // Store pseudonyms per participant for this specific chat session
+  participantPseudonyms: { [userId: string]: string }; 
+  lastMessageId?: string;
+  lastMessageText?: string;
+  lastMessageTimestamp?: string; // ISO string
+  // unreadCount can be maintained per user within the chat session if needed
+  // e.g., unreadCounts: { [userId: string]: number }
+}
+
+
 export type ActivityType =
   | 'USER_CREATED_POST' 
   | 'USER_CREATED_GROUP' 
   | 'USER_POST_FLAGGED' 
   | 'OTHERS_LIKED_USER_POST' 
-  | 'OTHERS_COMMENTED_ON_USER_POST'; 
+  | 'OTHERS_COMMENTED_ON_USER_POST'
+  | 'USER_MENTIONED_IN_COMMENT'; // New activity type
 
 // Specific data interfaces for each activity type
 interface BaseActivityData {
@@ -284,7 +327,7 @@ export interface UserCreatedGroupData extends BaseActivityData {
 
 export interface UserPostFlaggedData extends BaseActivityData {
   type: 'USER_POST_FLAGGED';
-  postId?: string; // PostId might not be available if content was flagged before post creation
+  postId?: string; 
   postSnippet: string;
   flagReason: string;
 }
@@ -293,15 +336,24 @@ export interface OthersLikedUserPostData extends BaseActivityData {
   type: 'OTHERS_LIKED_USER_POST';
   postId: string;
   postSnippet?: string;
-  // actorUserId, actorDisplayName, actorPhotoURL are essential here
 }
 
 export interface OthersCommentedOnUserPostData extends BaseActivityData {
   type: 'OTHERS_COMMENTED_ON_USER_POST';
   postId: string;
   postSnippet?: string;
+  commentId: string; // ID of the comment
   commentSnippet: string;
-   // actorUserId, actorDisplayName, actorPhotoURL are essential here
+}
+
+export interface UserMentionedInCommentData extends BaseActivityData {
+  type: 'USER_MENTIONED_IN_COMMENT';
+  postId: string;
+  postSnippet?: string; // Snippet of the post where mention occurred
+  commentId: string; // ID of the comment containing the mention
+  commentSnippet: string; // Snippet of the comment
+  // actorUserId is the one who made the comment and mentioned the user
+  // actorDisplayName is the display name of the one who mentioned
 }
 
 // Discriminated union for ActivityItem data
@@ -310,12 +362,13 @@ export type ActivityItemData =
   | UserCreatedGroupData
   | UserPostFlaggedData
   | OthersLikedUserPostData
-  | OthersCommentedOnUserPostData;
+  | OthersCommentedOnUserPostData
+  | UserMentionedInCommentData; // Added new type
 
 export interface ActivityItem {
   id: string;
   userId: string; // User to whom this activity pertains
-  type: ActivityType; // This will be used as the discriminator
+  type: ActivityType; 
   timestamp: string; // ISO string
   isRead: boolean;
   data: ActivityItemData;

@@ -5,7 +5,8 @@ import React from 'react';
 import AppHeader from '@/components/core/AppHeader';
 import BottomNavigationBar from '@/components/core/BottomNavigationBar';
 import { CreatePostDialog } from '@/components/core/CreatePostDialog';
-import { CreateGroupDialog } from '@/components/core/CreateGroupDialog'; // Import CreateGroupDialog
+import { CreateGroupDialog } from '@/components/core/CreateGroupDialog';
+import { ChatModal } from '@/components/core/ChatModal'; // Import ChatModal
 import { Toaster } from '@/components/ui/toaster';
 import { useUiStore } from '@/store/uiStore';
 
@@ -14,10 +15,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     isCreatePostDialogOpen, 
     closeCreatePostDialog, 
     defaultGroupIdForPostDialog,
-    openCreatePostDialog, // For BottomNavigationBar
-    isCreateGroupDialogOpen, // Add state for CreateGroupDialog
-    openCreateGroupDialog,   // Not used here directly, but part of store
-    closeCreateGroupDialog   // Add action for CreateGroupDialog
+    openCreatePostDialog, 
+    isCreateGroupDialogOpen, 
+    closeCreateGroupDialog,
+    // ChatModal state is managed internally by ChatModal and uiStore
   } = useUiStore();
 
   return (
@@ -44,6 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           }
         }}
       />
+      <ChatModal /> {/* Add ChatModal here */}
       <Toaster />
     </>
   );

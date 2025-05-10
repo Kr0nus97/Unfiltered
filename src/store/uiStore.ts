@@ -10,6 +10,13 @@ interface UiState {
   isCreateGroupDialogOpen: boolean;
   openCreateGroupDialog: () => void;
   closeCreateGroupDialog: () => void;
+
+  isChatModalOpen: boolean;
+  chatTargetUserId?: string;
+  chatTargetUserDisplayName?: string; // Or pseudonym if preferred for chat context
+  chatPostIdContext?: string; // Optional context for the chat
+  openChatModal: (targetUserId: string, targetUserDisplayName: string, postIdContext?: string) => void;
+  closeChatModal: () => void;
 }
 
 export const useUiStore = create<UiState>((set) => ({
@@ -29,4 +36,23 @@ export const useUiStore = create<UiState>((set) => ({
   isCreateGroupDialogOpen: false,
   openCreateGroupDialog: () => set({ isCreateGroupDialogOpen: true }),
   closeCreateGroupDialog: () => set({ isCreateGroupDialogOpen: false }),
+
+  isChatModalOpen: false,
+  chatTargetUserId: undefined,
+  chatTargetUserDisplayName: undefined,
+  chatPostIdContext: undefined,
+  openChatModal: (targetUserId, targetUserDisplayName, postIdContext) => 
+    set({ 
+      isChatModalOpen: true, 
+      chatTargetUserId: targetUserId,
+      chatTargetUserDisplayName: targetUserDisplayName,
+      chatPostIdContext: postIdContext,
+    }),
+  closeChatModal: () => 
+    set({ 
+      isChatModalOpen: false, 
+      chatTargetUserId: undefined, 
+      chatTargetUserDisplayName: undefined,
+      chatPostIdContext: undefined,
+    }),
 }));

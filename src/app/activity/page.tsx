@@ -7,7 +7,7 @@ import { usePostsStore } from "@/store/postsStore";
 import type { ActivityItem as ActivityItemType } from "@/lib/types";
 import { ActivityItemCard } from "@/components/core/ActivityItemCard";
 import { Button } from "@/components/ui/button";
-import { Loader2, LogIn, ListChecks, BellOff, Users } from "lucide-react"; // Added Users icon
+import { Loader2, LogIn, ListChecks, BellOff, Users } from "lucide-react"; 
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -25,16 +25,16 @@ export default function ActivityPage() {
       setIsLoadingActivities(true);
       return;
     }
-    if (user && !isGuestMode) { // Only fetch activities for logged-in (non-guest) users
+    if (user && !isGuestMode) { 
       setIsLoadingActivities(true);
       const userActivities = getUserActivities(user.uid);
       setActivities(userActivities);
       setIsLoadingActivities(false);
-    } else { // Guests or non-logged-in users have no activities
+    } else { 
       setActivities([]);
       setIsLoadingActivities(false);
     }
-  }, [user, isGuestMode, authLoading, getUserActivities, usePostsStore(state => state.activityFeed)]);
+  }, [user, isGuestMode, authLoading, getUserActivities, usePostsStore(state => state.activityFeed)]); // Depend on activityFeed for updates
 
   const handleMarkAllRead = () => {
     if (user && !isGuestMode) {
@@ -66,7 +66,7 @@ export default function ActivityPage() {
     );
   }
 
-  if (!user && isGuestMode) { // Guest mode
+  if (!user && isGuestMode) { 
     return (
       <div className="container mx-auto py-8 px-4 text-center">
         <h1 className="text-3xl font-bold text-primary mb-6">Activity Feed</h1>
@@ -84,7 +84,7 @@ export default function ActivityPage() {
     );
   }
   
-  if (!user && !isGuestMode) { // Not logged in, not guest
+  if (!user && !isGuestMode) { 
     return (
       <div className="container mx-auto py-8 px-4 text-center">
         <h1 className="text-3xl font-bold text-primary mb-6">Activity Feed</h1>
@@ -102,7 +102,6 @@ export default function ActivityPage() {
     );
   }
   
-  // User is logged in and not a guest
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b">
@@ -136,4 +135,3 @@ export default function ActivityPage() {
     </div>
   );
 }
-
