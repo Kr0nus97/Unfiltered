@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -19,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import type { Group, ActivityType } from "@/lib/types";
+import type { Group, ActivityType, UserCreatedGroupData } from "@/lib/types";
 import { usePostsStore } from "@/store/postsStore";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2, LogIn, Image as ImageIcon, UserCheck, AlertCircle } from "lucide-react"; // Added UserCheck, AlertCircle
@@ -65,7 +64,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
   }, [isOpen, form]);
 
   async function onSubmit(data: GroupFormValues) {
-    if (!user) { // This covers guests as well
+    if (!user || isGuestMode) { // User must be logged in and not a guest
       toast({
         title: "Authentication Required",
         description: "Please sign in to create a group.",
@@ -82,19 +81,23 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
         name: data.name,
         description: data.description,
         backgroundImageUrl: data.backgroundImageUrl || undefined,
-        creatorId: user.uid,
+        creatorId: user.uid, // user is guaranteed to be non-null here
         postCount: 0,
         memberCount: 1, 
       };
 
       addGroup(newGroup);
+      
+      // Add activity item for group creation
       addActivityItem({
-        userId: user.uid,
+        userId: user.uid, // user is guaranteed to be non-null
         type: 'USER_CREATED_GROUP',
         data: {
+          type: 'USER_CREATED_GROUP', // Discriminator
           groupId: newGroupId,
           groupName: data.name,
-        },
+          // actorUserId and other actor fields can be omitted if it's the user's own action
+        } as UserCreatedGroupData,
       });
 
 
@@ -260,4 +263,3 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
     </Dialog>
   );
 }
-

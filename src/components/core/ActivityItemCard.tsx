@@ -1,7 +1,7 @@
-
 "use client";
 
-import type { ActivityItem } from "@/lib/types";
+import React from "react";
+import type { ActivityItem, ActivityItemData, UserCreatedPostData, UserCreatedGroupData, UserPostFlaggedData, OthersLikedUserPostData, OthersCommentedOnUserPostData } from "@/lib/types";
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,19 +31,19 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
       case 'OTHERS_COMMENTED_ON_USER_POST':
         return <MessageSquare className="h-5 w-5 text-purple-500" />;
       default:
+        // Fallback icon - using a type assertion to satisfy TypeScript
+        const _exhaustiveCheck: never = activity.type;
         return <BellIcon className="h-5 w-5 text-gray-500" />;
     }
   };
   
-  // Helper to get a generic icon if actorPhotoURL is missing
   const ActorAvatarFallback = ({ name }: { name?: string }) => {
     const initial = name ? name.charAt(0).toUpperCase() : <UserCircle2 />;
     return <AvatarFallback>{initial}</AvatarFallback>;
   };
 
-
   const renderMessage = () => {
-    const { data } = activity;
+    const { data } = activity; // data is now ActivityItemData (discriminated union)
     let messageParts: (string | JSX.Element)[] = [];
     let linkPath: string | undefined = undefined;
 
@@ -53,13 +53,16 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
       <span key="actor-anon" className="font-semibold text-accent">Someone</span>
     );
 
-    const postLink = data.postId ? (
-        <Link key="postlink" href={`/groups/${data.groupId}/#post-${data.postId}`} className="font-semibold text-primary hover:underline">
-            "{data.postSnippet || 'your post'}"
+    // Helper function to create post link, checking if data has postId
+    const createPostLink = (postData: { postId?: string, postSnippet?: string, groupId?: string }) => {
+      return postData.postId ? (
+        <Link key="postlink" href={`/groups/${postData.groupId}/#post-${postData.postId}`} className="font-semibold text-primary hover:underline">
+            "{postData.postSnippet || 'your post'}"
         </Link>
-    ) : (
-        <span key="postlink-fallback" className="font-semibold">"{data.postSnippet || 'a post'}"</span>
-    );
+      ) : (
+          <span key="postlink-fallback" className="font-semibold">"{postData.postSnippet || 'a post'}"</span>
+      );
+    }
     
     const groupLink = data.groupId ? (
          <Link key="grouplink" href={`/groups/${data.groupId}`} className="font-semibold text-primary hover:underline">
@@ -70,9 +73,9 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
     );
 
 
-    switch (activity.type) {
+    switch (data.type) { // Discriminate based on data.type
       case 'USER_CREATED_POST':
-        messageParts = ["You created ", postLink, " in ", groupLink, "."];
+        messageParts = ["You created ", createPostLink(data), " in ", groupLink, "."];
         linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : (data.groupId ? `/groups/${data.groupId}` : undefined);
         break;
       case 'USER_CREATED_GROUP':
@@ -80,18 +83,20 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
         linkPath = data.groupId ? `/groups/${data.groupId}` : undefined;
         break;
       case 'USER_POST_FLAGGED':
-        messageParts = ["Your post ", postLink, " in ", groupLink, ` was flagged: "${data.flagReason || 'Community guidelines'}"`];
+        messageParts = ["Your post ", createPostLink(data), " in ", groupLink, ` was flagged: "${data.flagReason || 'Community guidelines'}"`];
         linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : (data.groupId ? `/groups/${data.groupId}` : undefined);
         break;
       case 'OTHERS_LIKED_USER_POST':
-        messageParts = [actorSpan, " liked ", postLink, "."];
+        messageParts = [actorSpan, " liked ", createPostLink(data), "."];
         linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : undefined;
         break;
       case 'OTHERS_COMMENTED_ON_USER_POST':
-        messageParts = [actorSpan, " commented on ", postLink, `: "${data.commentSnippet || '...'}"`];
+        messageParts = [actorSpan, " commented on ", createPostLink(data), `: "${data.commentSnippet || '...'}"`];
         linkPath = data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : undefined;
         break;
       default:
+         // Fallback for unhandled types, though should not happen with discriminated union
+        const _exhaustiveCheck: never = data; 
         messageParts = ["New notification."];
     }
     
@@ -128,7 +133,7 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
               variant="ghost" 
               size="sm" 
               onClick={(e) => { 
-                e.preventDefault(); // Prevent link navigation if it's a link
+                e.preventDefault(); 
                 e.stopPropagation();
                 onMarkAsRead(activity.id);
               }}
@@ -144,7 +149,6 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
   );
 }
 
-// Placeholder BellIcon if lucide-react's Bell is not suitable or available
 const BellIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}

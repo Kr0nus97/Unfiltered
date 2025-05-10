@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Post } from "@/lib/types";
@@ -21,31 +20,55 @@ interface PostCardProps {
   post: Post;
 }
 
+interface StoredReaction {
+  liked: boolean;
+  disliked: boolean;
+}
+
 export function PostCard({ post }: PostCardProps) {
   const updatePostReactions = usePostsStore(state => state.updatePostReactions);
   const { user, isGuestMode, signInWithGoogle } = useAuth(); 
   const { toast } = useToast();
 
+  // Local state for UI feedback, initialized from props then local storage
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [likes, setLikes] = useState(post.likes);
   const [dislikes, setDislikes] = useState(post.dislikes);
   const [timeAgo, setTimeAgo] = useState<string | null>(null);
 
+  const getLocalStorageKey = (postId: string) => `unfiltered-reaction-${postId}`;
+
+  // Effect to initialize reaction state from local storage or props
+  useEffect(() => {
+    setLikes(post.likes);
+    setDislikes(post.dislikes);
+
+    const storedReactionString = localStorage.getItem(getLocalStorageKey(post.id));
+    if (storedReactionString) {
+      try {
+        const storedReaction: StoredReaction = JSON.parse(storedReactionString);
+        setLiked(storedReaction.liked);
+        setDisliked(storedReaction.disliked);
+      } catch (e) {
+        console.error("Error parsing stored reaction:", e);
+        localStorage.removeItem(getLocalStorageKey(post.id)); // Clear invalid data
+        setLiked(false);
+        setDisliked(false);
+      }
+    } else {
+      // If no stored reaction, default to false
+      setLiked(false);
+      setDisliked(false);
+    }
+  }, [post.id, post.likes, post.dislikes, user]); // Rerun if user changes to potentially clear/reset (though current logic mainly pulls from LS)
+
+
   useEffect(() => {
     if (post.createdAt) {
       setTimeAgo(formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }));
     }
   }, [post.createdAt]);
-
-  useEffect(() => {
-    setLikes(post.likes);
-    setDislikes(post.dislikes);
-    // Reset local liked/disliked state if user changes or post changes
-    // This is a simplification; a more robust solution would store user's reactions
-    setLiked(false); 
-    setDisliked(false);
-  }, [post.likes, post.dislikes, user, post.id]);
 
 
   const handleInteraction = (actionType: 'like' | 'dislike') => {
@@ -64,35 +87,45 @@ export function PostCard({ post }: PostCardProps) {
     let newDislikedState = disliked;
 
     if (actionType === 'like') {
-      if (liked) {
+      if (newLikedState) { // If currently liked, unlike
         newLikedState = false;
         newLikesCount--;
-      } else {
+      } else { // If not liked, like it
         newLikedState = true;
         newLikesCount++;
-        if (disliked) {
+        if (newDislikedState) { // If was disliked, remove dislike
           newDislikedState = false;
           newDislikesCount--;
         }
       }
     } else if (actionType === 'dislike') {
-      if (disliked) {
+      if (newDislikedState) { // If currently disliked, undislike
         newDislikedState = false;
         newDislikesCount--;
-      } else {
+      } else { // If not disliked, dislike it
         newDislikedState = true;
         newDislikesCount++;
-        if (liked) {
+        if (newLikedState) { // If was liked, remove like
           newLikedState = false;
           newLikesCount--;
         }
       }
     }
     
+    // Update local UI state immediately
     setLiked(newLikedState);
     setDislikes(newDislikedState);
     setLikes(newLikesCount < 0 ? 0 : newLikesCount);
     setDislikes(newDislikesCount < 0 ? 0 : newDislikesCount);
+
+    // Persist to local storage
+    try {
+      localStorage.setItem(getLocalStorageKey(post.id), JSON.stringify({ liked: newLikedState, disliked: newDislikedState }));
+    } catch (e) {
+      console.error("Error saving reaction to local storage:", e);
+    }
+    
+    // Update global store (mock backend)
     updatePostReactions(post.id, newLikesCount < 0 ? 0 : newLikesCount, newDislikesCount < 0 ? 0 : newDislikesCount, user.uid); 
   };
   
@@ -204,4 +237,3 @@ export function PostCard({ post }: PostCardProps) {
     </Card>
   );
 }
-

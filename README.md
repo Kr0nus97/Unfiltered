@@ -120,17 +120,17 @@ UnFiltered allows users to share opinions and content anonymously within interes
 
 -   **Theming**: Updated `globals.css` with the specified color palette and dark mode support. `ThemeToggle` component for switching themes.
 -   **Layout**: App shell with `AppHeader`, `BottomNavigationBar`, main content area.
--   **Authentication**: Google Sign-In via Firebase (`AuthContext.tsx`, Account page).
+-   **Authentication**: Google Sign-In via Firebase (`AuthContext.tsx`, Account page). Guest mode implemented.
 -   **Pseudonym Generation**: Utility in `src/lib/pseudonyms.ts`.
--   **Mock Data & Store**: `src/store/postsStore.ts` provides mock groups, posts, and activity feed items. Uses Zustand for state management.
+-   **Mock Data & Store**: `src/store/postsStore.ts` provides mock groups, posts, and activity feed items. Uses Zustand for state management. Local storage used for post reaction persistence.
 -   **Post Display**: `PostCard.tsx` renders posts with text, images (URL), video (URL), audio (URL), links, likes/dislikes.
 -   **Group Display**: `GroupCard.tsx` for group discovery, including background images.
 -   **Navigation**: Home feed (`/`), Groups page (`/groups`), individual group pages (`/groups/[groupId]`), Account page (`/account`), Activity feed (`/activity`).
--   **Create Post**: Dialog (`CreatePostDialog.tsx`) allows authenticated users to create posts (text, image, video, audio, link), select a group.
+-   **Create Post**: Dialog (`CreatePostDialog.tsx`) allows authenticated users to create posts (text, image, video, audio, link), select a group. Max length for text posts.
 -   **Create Group**: Dialog (`CreateGroupDialog.tsx`) allows authenticated users to create new groups with name, description, and optional background image URL.
 -   **AI Moderation**: Integrated `moderateContent` AI flow into the post creation process.
 -   **Markdown Rendering**: `MarkdownRenderer.tsx` for displaying Markdown in posts.
--   **Activity Feed**: `ActivityPage.tsx` and `ActivityItemCard.tsx` display user-specific activities. PostsStore manages mock activity data.
+-   **Activity Feed**: `ActivityPage.tsx` and `ActivityItemCard.tsx` display user-specific activities. PostsStore manages mock activity data. Type-safe activity data structures.
 -   **Responsive Design**: UI adapts to mobile and desktop, including bottom navigation for mobile.
 
 ## Troubleshooting Authentication Errors
@@ -176,3 +176,12 @@ If you encounter authentication errors (e.g., "Authentication Error: Failed to g
 8.  **Firebase Project Region/Location**: Ensure your Firebase project's region settings (if applicable, e.g., for Firestore/Functions) are compatible and there are no regional restrictions affecting authentication.
 
 By systematically checking these points, especially ensuring `localhost` (and the project's `authDomain` like `your-project-id.firebaseapp.com`) is listed in the **Authorized Domains** in your Firebase Authentication settings, you should be able to resolve the "auth/unauthorized-domain" error.
+
+## Future Considerations / Security Notes (If using a real backend)
+
+*   **Server-Side Validation:** For features like group creation with background image URLs, implement server-side validation to ensure data integrity and security (e.g., validating URL formats, checking for malicious links).
+*   **Input Sanitization:** If allowing direct HTML input (currently Markdown is used which `react-markdown` helps sanitize), robust server-side and client-side sanitization (e.g., using libraries like DOMPurify) is crucial to prevent Cross-Site Scripting (XSS) attacks.
+*   **Firebase Security Rules (or Backend Authorization):** If using Firebase Firestore/Realtime Database for data storage, configure comprehensive Firebase Security Rules to control data access and modification. Ensure only authenticated users can perform specific actions and that users can only access/modify their own data where appropriate.
+*   **Rate Limiting:** Implement rate limiting on backend APIs (e.g., for post creation, reactions) to prevent abuse and denial-of-service attacks.
+*   **Data Persistence:** The current application uses mock data and client-side state (Zustand). For a production application, this data would need to be stored in a persistent database (like Firebase Firestore or a custom backend).
+*   **User Reaction Storage:** While post reactions (likes/dislikes) are persisted in local storage for UX in this version, a production app would store these on the backend, associated with user IDs, to ensure consistency across devices and sessions.

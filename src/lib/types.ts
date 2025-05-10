@@ -1,4 +1,3 @@
-
 export interface Group {
   id: string;
   name: string;
@@ -256,27 +255,68 @@ export const NOUNS = [
 export type Noun = typeof NOUNS[number];
 
 export type ActivityType =
-  | 'USER_CREATED_POST' // You posted "[postSnippet]" in "[groupName]"
-  | 'USER_CREATED_GROUP' // You created the group "[groupName]"
-  | 'USER_POST_FLAGGED' // Your post "[postSnippet]" in "[groupName]" was flagged for: [reason]
-  | 'OTHERS_LIKED_USER_POST' // "[actorDisplayName]" liked your post "[postSnippet]"
-  | 'OTHERS_COMMENTED_ON_USER_POST'; // "[actorDisplayName]" commented on your post "[postSnippet]"
+  | 'USER_CREATED_POST' 
+  | 'USER_CREATED_GROUP' 
+  | 'USER_POST_FLAGGED' 
+  | 'OTHERS_LIKED_USER_POST' 
+  | 'OTHERS_COMMENTED_ON_USER_POST'; 
+
+// Specific data interfaces for each activity type
+interface BaseActivityData {
+  groupId?: string;
+  groupName?: string;
+  actorUserId?: string; // UID of the actor
+  actorDisplayName?: string; // Display name of the actor
+  actorPhotoURL?: string;
+}
+
+export interface UserCreatedPostData extends BaseActivityData {
+  type: 'USER_CREATED_POST';
+  postId: string;
+  postSnippet: string;
+}
+
+export interface UserCreatedGroupData extends BaseActivityData {
+  type: 'USER_CREATED_GROUP';
+  groupId: string; // Overwrites optional groupId from BaseActivityData
+  groupName: string; // Overwrites optional groupName from BaseActivityData
+}
+
+export interface UserPostFlaggedData extends BaseActivityData {
+  type: 'USER_POST_FLAGGED';
+  postId?: string; // PostId might not be available if content was flagged before post creation
+  postSnippet: string;
+  flagReason: string;
+}
+
+export interface OthersLikedUserPostData extends BaseActivityData {
+  type: 'OTHERS_LIKED_USER_POST';
+  postId: string;
+  postSnippet?: string;
+  // actorUserId, actorDisplayName, actorPhotoURL are essential here
+}
+
+export interface OthersCommentedOnUserPostData extends BaseActivityData {
+  type: 'OTHERS_COMMENTED_ON_USER_POST';
+  postId: string;
+  postSnippet?: string;
+  commentSnippet: string;
+   // actorUserId, actorDisplayName, actorPhotoURL are essential here
+}
+
+// Discriminated union for ActivityItem data
+export type ActivityItemData =
+  | UserCreatedPostData
+  | UserCreatedGroupData
+  | UserPostFlaggedData
+  | OthersLikedUserPostData
+  | OthersCommentedOnUserPostData;
 
 export interface ActivityItem {
   id: string;
   userId: string; // User to whom this activity pertains
-  type: ActivityType;
+  type: ActivityType; // This will be used as the discriminator
   timestamp: string; // ISO string
   isRead: boolean;
-  data: {
-    postId?: string;
-    postSnippet?: string;
-    groupId?: string;
-    groupName?: string;
-    actorUserId?: string; // UID of the actor
-    actorDisplayName?: string; // Display name of the actor (e.g., who liked the post or commented)
-    actorPhotoURL?: string;
-    flagReason?: string; // For USER_POST_FLAGGED
-    commentSnippet?: string; // For OTHERS_COMMENTED_ON_USER_POST
-  };
+  data: ActivityItemData;
 }

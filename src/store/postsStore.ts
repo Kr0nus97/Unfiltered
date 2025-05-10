@@ -1,6 +1,16 @@
-
 import { create } from 'zustand';
-import type { Post, Group, ActivityItem, ActivityType } from '@/lib/types';
+import type { 
+    Post, 
+    Group, 
+    ActivityItem, 
+    ActivityType, 
+    ActivityItemData,
+    UserCreatedPostData,
+    UserCreatedGroupData,
+    UserPostFlaggedData,
+    OthersLikedUserPostData,
+    OthersCommentedOnUserPostData
+} from '@/lib/types';
 import { generatePseudonym } from '@/lib/pseudonyms'; 
 
 // Mock user UIDs for demonstrating activity feed for a "logged-in" mock user
@@ -164,11 +174,12 @@ const MOCK_ACTIVITY_FEED: ActivityItem[] = [
     timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 30).toISOString(),
     isRead: false,
     data: {
+      type: 'USER_CREATED_POST',
       postId: '1',
       postSnippet: "Just upgraded to the latest Quantum Processor X1!...",
       groupId: 'tech',
       groupName: 'Technology Talk',
-    },
+    } as UserCreatedPostData,
   },
   {
     id: 'act2',
@@ -177,13 +188,15 @@ const MOCK_ACTIVITY_FEED: ActivityItem[] = [
     timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 25).toISOString(),
     isRead: true,
     data: {
+      type: 'OTHERS_LIKED_USER_POST',
       postId: '1',
       postSnippet: "Just upgraded to the latest Quantum Processor X1!...",
       groupId: 'tech',
       groupName: 'Technology Talk',
       actorDisplayName: 'RandomUser123',
       actorPhotoURL: 'https://picsum.photos/seed/actor1/40/40',
-    },
+      actorUserId: 'random-user-123-uid',
+    } as OthersLikedUserPostData,
   },
   {
     id: 'act3',
@@ -192,23 +205,25 @@ const MOCK_ACTIVITY_FEED: ActivityItem[] = [
     timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 60 * 2).toISOString(),
     isRead: false,
     data: {
+      type: 'USER_CREATED_GROUP',
       groupId: 'foodies',
       groupName: 'Food Lovers',
-    },
+    } as UserCreatedGroupData,
   },
   {
     id: 'act4',
-    userId: MOCK_USER_UID_1, // Belongs to MOCK_USER_UID_1
+    userId: MOCK_USER_UID_1, 
     type: 'USER_POST_FLAGGED',
     timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 15).toISOString(),
     isRead: false,
     data: {
-      postId: '4', // Let's assume post '4' was flagged
+      type: 'USER_POST_FLAGGED',
+      postId: '4', 
       postSnippet: "CyberNeon Chronicles just dropped its new DLC...",
       groupId: 'gaming',
       groupName: 'Game Central',
       flagReason: 'Potentially controversial content.',
-    },
+    } as UserPostFlaggedData,
   },
   {
     id: 'act5',
@@ -217,14 +232,16 @@ const MOCK_ACTIVITY_FEED: ActivityItem[] = [
     timestamp: new Date(BASE_DATE.getTime() - 1000 * 60 * 10).toISOString(),
     isRead: true,
     data: {
+      type: 'OTHERS_COMMENTED_ON_USER_POST',
       postId: '1',
       postSnippet: "Just upgraded to the latest Quantum Processor X1!...",
       groupId: 'tech',
       groupName: 'Technology Talk',
       actorDisplayName: 'HelpfulCommenter',
       actorPhotoURL: 'https://picsum.photos/seed/actor2/40/40',
-      commentSnippet: 'That sounds awesome! I was thinking of getting one.'
-    },
+      commentSnippet: 'That sounds awesome! I was thinking of getting one.',
+      actorUserId: 'helpful-commenter-uid',
+    } as OthersCommentedOnUserPostData,
   },
 ];
 
@@ -240,11 +257,10 @@ interface PostsState {
   updatePostReactions: (postId: string, newLikes: number, newDislikes: number, actingUserId?: string) => void;
   addGroup: (group: Group) => void;
   
-  // Activity Feed actions
   addActivityItem: (itemDetails: {
     userId: string;
-    type: ActivityType;
-    data: ActivityItem['data'];
+    type: ActivityType; // The discriminator type
+    data: ActivityItemData; // The discriminated union
   }) => void;
   getUserActivities: (userId: string) => ActivityItem[];
   markActivityAsRead: (userId: string, activityId: string) => void;
@@ -289,22 +305,19 @@ export const usePostsStore = create<PostsState>((set, get) => ({
       ),
     }));
 
-    // If an actingUser exists and is not the post owner, create activity for post owner
     if (actingUserId && post.userId && actingUserId !== post.userId) {
-      // Try to find actor details from existing posts, or use a default
       const actorPost = get().posts.find(p => p.userId === actingUserId);
       const actorDisplayName = actorPost?.userDisplayName || 'An anonymous user';
       const actorPhotoURL = actorPost?.userPhotoURL || `https://picsum.photos/seed/${actingUserId}/40/40`;
 
-
       const liked = newLikes > post.likes;
-      // const disliked = newDislikes > post.dislikes; // not used for now
 
       if (liked) {
         get().addActivityItem({
           userId: post.userId,
           type: 'OTHERS_LIKED_USER_POST',
           data: {
+            type: 'OTHERS_LIKED_USER_POST',
             postId: post.id,
             postSnippet: post.text?.substring(0, 50) + (post.text && post.text.length > 50 ? '...' : ''),
             groupId: post.groupId,
@@ -312,10 +325,9 @@ export const usePostsStore = create<PostsState>((set, get) => ({
             actorUserId: actingUserId,
             actorDisplayName: actorDisplayName,
             actorPhotoURL: actorPhotoURL,
-          },
+          } as OthersLikedUserPostData,
         });
       }
-      // Note: Similar logic for dislikes or comments would go here.
     }
   },
 
@@ -329,17 +341,29 @@ export const usePostsStore = create<PostsState>((set, get) => ({
     set((state) => ({
       groups: [newGroupWithDefaults, ...state.groups],
     }));
+     // Add activity item for group creation
+     if (group.creatorId) {
+      get().addActivityItem({
+        userId: group.creatorId,
+        type: 'USER_CREATED_GROUP',
+        data: {
+          type: 'USER_CREATED_GROUP',
+          groupId: newGroupWithDefaults.id,
+          groupName: newGroupWithDefaults.name,
+          creatorId: group.creatorId
+        } as UserCreatedGroupData,
+      });
+    }
   },
 
-  // Activity Feed implementations
   addActivityItem: (itemDetails) => {
     const newActivity: ActivityItem = {
       id: crypto.randomUUID(),
       userId: itemDetails.userId,
-      type: itemDetails.type,
+      type: itemDetails.type, // This should align with itemDetails.data.type
       timestamp: new Date().toISOString(),
       isRead: false,
-      data: itemDetails.data,
+      data: itemDetails.data, // Already a discriminated union
     };
     set((state) => ({
       activityFeed: [newActivity, ...state.activityFeed].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
@@ -370,4 +394,3 @@ export const usePostsStore = create<PostsState>((set, get) => ({
     }));
   },
 }));
-

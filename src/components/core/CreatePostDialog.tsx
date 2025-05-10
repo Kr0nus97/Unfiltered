@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -32,7 +31,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const postFormSchema = z.object({
   groupId: z.string().min(1, "Please select a group"),
-  text: z.string().optional(),
+  text: z.string().max(5000, "Post text cannot exceed 5000 characters.").optional(), // Added maxLength
   imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   videoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   audioUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
@@ -133,6 +132,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
           userId: user.uid,
           type: 'USER_POST_FLAGGED',
           data: {
+            type: 'USER_POST_FLAGGED', // For discriminated union
             postSnippet: (data.text || "Media post").substring(0, 50) + '...',
             groupId: data.groupId,
             groupName: selectedGroup?.name || data.groupId,
@@ -167,6 +167,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         userId: user.uid,
         type: 'USER_CREATED_POST',
         data: {
+          type: 'USER_CREATED_POST', // For discriminated union
           postId: newPost.id,
           postSnippet: (newPost.text || "Media post").substring(0, 50) + '...',
           groupId: newPost.groupId,
@@ -303,6 +304,9 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
               {...form.register("text")}
               className="min-h-[100px] resize-y"
             />
+             {form.formState.errors.text && ( // Display text-specific errors (like maxLength) here
+              <p className="text-xs text-destructive">{form.formState.errors.text.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -369,9 +373,11 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
             )}
           </div>
           
-          {form.formState.errors.text && !form.formState.errors.groupId && !form.formState.errors.imageUrl && !form.formState.errors.videoUrl && !form.formState.errors.audioUrl && !form.formState.errors.linkUrl && (
+           {/* General form error for "at least one field" */}
+           {form.formState.errors.text && form.formState.errors.text.type === "manual" && (
              <p className="text-sm text-destructive">{form.formState.errors.text.message}</p>
            )}
+
 
           <DialogFooter className="pt-4">
             <DialogClose asChild>
@@ -403,4 +409,3 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
     </Dialog>
   );
 }
-
