@@ -134,7 +134,7 @@ UnFiltered allows users to share opinions and content anonymously within interes
 -   **Responsive Design**: UI adapts to mobile and desktop, including bottom navigation for mobile.
 
 ## Troubleshooting Authentication Errors
-If you encounter authentication errors (e.g., "Authentication Error: Failed to get authentication state.", issues with Google Sign-In popups, or **"Invalid Domain"** errors):
+If you encounter authentication errors (e.g., "Authentication Error: Failed to get authentication state.", issues with Google Sign-In popups, or **"Invalid Domain" / "auth/unauthorized-domain"** errors):
 
 1.  **Verify `.env.local` Configuration**:
     *   Ensure all `NEXT_PUBLIC_FIREBASE_` variables are correctly copied from your Firebase project settings into the `.env.local` file at the root of your project.
@@ -150,14 +150,16 @@ If you encounter authentication errors (e.g., "Authentication Error: Failed to g
     *   Confirm that **Google** is **ENABLED** as a sign-in provider.
     *   Ensure your project support email is set if required by the Google provider.
 
-3.  **Authorized Domains (VERY IMPORTANT for "Invalid Domain" errors)**:
+3.  **Authorized Domains (VERY IMPORTANT for "auth/unauthorized-domain" errors)**:
+    *   This is the most common cause for the "auth/unauthorized-domain" error.
     *   In the Firebase console, go to **Authentication** -> **Settings** (tab).
     *   Under the **Authorized domains** section, click "Add domain".
-    *   **For local development**:
-        *   Add `localhost`. (This is often added by default, but verify).
-        *   If your app runs on a specific port locally (like `http://localhost:9002` which is the default for this project), `localhost` usually covers this. Some older Firebase setups might have required the port, but typically just `localhost` is sufficient.
+    *   **For local development (this project runs on `http://localhost:9002` by default):**
+        *   **Add `localhost`**. This is usually added by default when you enable a sign-in provider, but **verify it is present**. This should typically cover all ports on localhost, including `9002`.
+        *   **If `localhost` alone does not resolve the issue**, try explicitly adding `localhost:9002` as well. However, this is often not necessary.
+        *   **Verify your `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` value** (e.g., `unfiltered-laoar.firebaseapp.com` from your `.env.local` file) is also listed in the "Authorized domains" in the Firebase console. Firebase usually adds this automatically when you set up the project or enable a sign-in provider, but it's crucial to confirm.
     *   **For deployed applications**: Add the domain where your application is hosted (e.g., `your-app-name.vercel.app`, `www.yourdomain.com`).
-    *   The `authDomain` (e.g., `unfiltered-laoar.firebaseapp.com` from your config) is automatically authorized, but issues can arise if the calling domain (where your Next.js app is running) isn't explicitly in this list.
+    *   If you recently added domains, it might take a few minutes for the changes to propagate.
 
 4.  **API Key Restrictions (Advanced)**:
     *   If you have restricted your Firebase API key in the Google Cloud Console (APIs & Services -> Credentials):
@@ -165,13 +167,12 @@ If you encounter authentication errors (e.g., "Authentication Error: Failed to g
         *   Verify it has the necessary Firebase service permissions (e.g., "Identity Toolkit API" for authentication).
         *   For initial setup and troubleshooting, it's often easier to temporarily remove restrictions on the API key and then re-apply them one by one to identify the issue.
 
-5.  **Browser Pop-up Blockers**: Ensure your browser is not blocking the Google Sign-In pop-up window. Try disabling pop-up blockers for your development site.
+5.  **Browser Pop-up Blockers**: Ensure your browser is not blocking the Google Sign-In pop-up window. Try disabling pop-up blockers for your development site (`http://localhost:9002`).
 
-6.  **Third-Party Cookies**: Some browsers or extensions might block third-party cookies, which can interfere with Google Sign-In. Try allowing third-party cookies for `google.com` and your `authDomain`.
+6.  **Third-Party Cookies**: Some browsers or extensions might block third-party cookies, which can interfere with Google Sign-In. Try allowing third-party cookies for `google.com` and your `authDomain` (e.g., `unfiltered-laoar.firebaseapp.com`).
 
-7.  **Console Errors**: Open your browser's developer console (usually F12). Look for more specific error messages from Firebase or your application. These can provide more clues.
+7.  **Console Errors**: Open your browser's developer console (usually F12). Look for more specific error messages from Firebase or your application. These can provide more clues beyond the toast notification.
 
 8.  **Firebase Project Region/Location**: Ensure your Firebase project's region settings (if applicable, e.g., for Firestore/Functions) are compatible and there are no regional restrictions affecting authentication.
 
-By systematically checking these points, especially the **Authorized Domains** in Firebase, you should be able to resolve the "invalid domain" error and other common authentication issues.
-```
+By systematically checking these points, especially ensuring `localhost` (and the project's `authDomain` like `your-project-id.firebaseapp.com`) is listed in the **Authorized Domains** in your Firebase Authentication settings, you should be able to resolve the "auth/unauthorized-domain" error.
