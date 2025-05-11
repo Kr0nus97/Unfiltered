@@ -14,9 +14,12 @@ import type {
     UserMentionedInCommentData,
     Message,
     ChatSession,
-    Comment
+    Comment,
+    PostNearingDeletionData,
+    MessageNearingDeletionData
 } from '@/lib/types';
 import { generatePseudonym } from '@/lib/pseudonyms'; 
+import { addMonths, isAfter, differenceInDays, isBefore, format } from 'date-fns';
 
 // Mock user UIDs for demonstrating activity feed for a "logged-in" mock user
 const MOCK_USER_UID_1 = 'mock-user-uid-1'; // Main user for activities
@@ -33,8 +36,10 @@ const ALL_MOCK_USERS = [
 ];
 
 
-// Define the public release date
+// Define the public release date (acts as "current date" for simulation)
 const PUBLIC_RELEASE_DATE = new Date('2025-05-10T12:00:00.000Z');
+const DATA_RETENTION_MONTHS = 1;
+const DELETION_WARNING_DAYS = 7; // Notify 7 days before deletion
 
 // Helper function to subtract time from a date
 const subtractTime = (date: Date, amount: number, unit: 'minutes' | 'hours' | 'days') => {
@@ -72,16 +77,30 @@ const MOCK_GROUPS_INITIAL_DEFINITION: Omit<Group, 'postCount' | 'memberCount'>[]
   { id: 'finance', name: 'Financial Freedom', description: 'Discussing investments, savings, and personal finance.', creatorId: MOCK_USER_UID_4, backgroundImageUrl: 'https://picsum.photos/seed/financegroup/600/300' },
 ];
 
+// Adjusting some post dates for testing deletion logic
 const MOCK_POSTS_INITIAL_DATA: Omit<Post, 'groupName' | 'createdAt' | 'likes' | 'dislikes' | 'commentsCount' | 'comments' | 'pseudonym'>[] = [
-  {
+  { // Post 1: Regular post, should be visible
     id: '1', groupId: 'tech', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
     text: "Just upgraded to the latest **Quantum Processor X1**! Performance is mind-blowing. @BobTheBuilder have you tried it? Check out the [official benchmarks](https://example.com/benchmarks).",
     isAnonymous: false,
+    // createdAt will be PUBLIC_RELEASE_DATE - 30 minutes
+  },
+  { // Post 21: Will be older than 1 month from PUBLIC_RELEASE_DATE (should be "deleted")
+    id: '21', groupId: 'history', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", userPhotoURL: "https://picsum.photos/seed/alice/40/40",
+    text: "This post should be 'deleted' as it's older than 1 month. Created 35 days before PUBLIC_RELEASE_DATE.",
+    isAnonymous: false,
+    // createdAt will be PUBLIC_RELEASE_DATE - 35 days
+  },
+  { // Post 22: Will be nearing deletion (e.g., 5 days from expiry if warning is 7 days)
+    id: '22', groupId: 'philosophy', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
+    text: "This post is nearing deletion. Created (1 month - 5 days) before PUBLIC_RELEASE_DATE.",
+    isAnonymous: true,
+    // createdAt will be PUBLIC_RELEASE_DATE - (approx 25 days)
   },
   {
     id: '6', groupId: 'tech', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", userPhotoURL: "https://picsum.photos/seed/bob/40/40",
     text: "AI is evolving so fast. What are some ethical considerations we should be discussing more openly? @AliceWonderland, your thoughts?",
-    isAnonymous: true, // This post will be anonymous
+    isAnonymous: true, 
   },
   {
     id: '8', groupId: 'videos', userId: MOCK_USER_UID_3, userDisplayName: "Charlie Brown", userPhotoURL: "https://picsum.photos/seed/charlie/40/40",
@@ -161,19 +180,32 @@ const MOCK_COMMENTS_INITIAL_DATA: Omit<Comment, 'createdAt' | 'likes' | 'dislike
   { id: 'c3', postId: '6', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", text: "Great question, @BobTheBuilder! Transparency and bias in algorithms are my main concerns.", mentions: ['mock-user-uid-2'], isAnonymous: false }, // Post 6 is anonymous, comment is not
   { id: 'c4', postId: '2', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", text: "I agree, the economic impact needs careful consideration. Are there any studies on that yet?", mentions: [], isAnonymous: false },
   { id: 'c5', postId: '3', userId: MOCK_USER_UID_4, userDisplayName: "Diana Prince", text: "Haha, deep thoughts indeed! 🤯", mentions: [], isAnonymous: true }, // Post 3 is anonymous, comment is anonymous
+  { id: 'c6', postId: '21', userId: MOCK_USER_UID_2, userDisplayName: "Bob TheBuilder", text: "This comment is on a post that should be deleted.", mentions: [], isAnonymous: false },
+  { id: 'c7', postId: '22', userId: MOCK_USER_UID_1, userDisplayName: "Alice Wonderland", text: "This comment is on a post nearing deletion.", mentions: [], isAnonymous: true },
 ];
 
 const MOCK_COMMENTS: Comment[] = MOCK_COMMENTS_INITIAL_DATA.map((commentData, index) => {
   const post = MOCK_POSTS_INITIAL_DATA.find(p => p.id === commentData.postId);
-  const postCreationDate = post ? PUBLIC_RELEASE_DATE : PUBLIC_RELEASE_DATE; 
+  
+  let postCreationDateToUse: Date;
+  if (post?.id === '21') { // Post to be deleted
+    postCreationDateToUse = new Date(subtractTime(PUBLIC_RELEASE_DATE, 35, 'days'));
+  } else if (post?.id === '22') { // Post nearing deletion
+     postCreationDateToUse = new Date(subtractTime(PUBLIC_RELEASE_DATE, DATA_RETENTION_MONTHS * 30 - 5, 'days')); // Approx 25 days before PRD
+  } else if (post) {
+      postCreationDateToUse = new Date(subtractTime(PUBLIC_RELEASE_DATE, (index % 5) * 5 + 5, 'minutes'));
+  }
+   else {
+    postCreationDateToUse = PUBLIC_RELEASE_DATE;
+  }
   
   let date;
-  const postTime = new Date(postCreationDate);
+  const postTime = new Date(postCreationDateToUse);
   switch (index % 3) {
-    case 0: date = subtractTime(postTime, -5 - (index * 2), 'minutes'); break; 
-    case 1: date = subtractTime(postTime, -10 - (index * 2), 'minutes'); break; 
-    case 2: date = subtractTime(postTime, -15 - (index * 2), 'minutes'); break; 
-    default: date = subtractTime(postTime, -5 - (index * 2), 'minutes');
+    case 0: date = subtractTime(postTime, -(5 + (index * 2)), 'minutes'); break; // Add time after post
+    case 1: date = subtractTime(postTime, -(10 + (index * 2)), 'minutes'); break; 
+    case 2: date = subtractTime(postTime, -(15 + (index * 2)), 'minutes'); break; 
+    default: date = subtractTime(postTime, -(5 + (index * 2)), 'minutes');
   }
 
   return {
@@ -189,23 +221,31 @@ const MOCK_COMMENTS: Comment[] = MOCK_COMMENTS_INITIAL_DATA.map((commentData, in
 
 export const MOCK_POSTS: Post[] = MOCK_POSTS_INITIAL_DATA.map((postData, index) => {
   let date;
-  switch (index % 15) { 
-    case 0: date = subtractTime(PUBLIC_RELEASE_DATE, 30 + index, 'minutes'); break; 
-    case 1: date = subtractTime(PUBLIC_RELEASE_DATE, 45 + index, 'minutes'); break; 
-    case 2: date = subtractTime(PUBLIC_RELEASE_DATE, 1 + Math.floor(index/5), 'hours'); break;    
-    case 3: date = subtractTime(PUBLIC_RELEASE_DATE, 1.5 + Math.floor(index/5), 'hours'); break;  
-    case 4: date = subtractTime(PUBLIC_RELEASE_DATE, 2 + Math.floor(index/5), 'hours'); break;    
-    case 5: date = subtractTime(PUBLIC_RELEASE_DATE, 2.5 + Math.floor(index/5), 'hours'); break;  
-    case 6: date = subtractTime(PUBLIC_RELEASE_DATE, 3 + Math.floor(index/5), 'hours'); break;    
-    case 7: date = subtractTime(PUBLIC_RELEASE_DATE, 4 + Math.floor(index/5), 'hours'); break;    
-    case 8: date = subtractTime(PUBLIC_RELEASE_DATE, 5 + Math.floor(index/5), 'hours'); break;    
-    case 9: date = subtractTime(PUBLIC_RELEASE_DATE, 6 + Math.floor(index/5), 'hours'); break;    
-    case 10: date = subtractTime(PUBLIC_RELEASE_DATE, 8 + Math.floor(index/5), 'hours'); break;   
-    case 11: date = subtractTime(PUBLIC_RELEASE_DATE, 10 + Math.floor(index/5), 'hours'); break;  
-    case 12: date = subtractTime(PUBLIC_RELEASE_DATE, 1 + Math.floor(index/10), 'days'); break;    
-    case 13: { let d = subtractTime(PUBLIC_RELEASE_DATE, 1 + Math.floor(index/10), 'days'); date = subtractTime(new Date(d), 2, 'hours'); break; }
-    case 14: date = subtractTime(PUBLIC_RELEASE_DATE, 2 + Math.floor(index/10), 'days'); break;   
-    default: date = PUBLIC_RELEASE_DATE.toISOString();
+  if (postData.id === '21') { // Post to be deleted
+    date = subtractTime(PUBLIC_RELEASE_DATE, 35, 'days'); // Older than 1 month
+  } else if (postData.id === '22') { // Post nearing deletion
+    const daysToSubtract = DATA_RETENTION_MONTHS * 30 - 5; // Approx 25 days before PUBLIC_RELEASE_DATE
+    date = subtractTime(PUBLIC_RELEASE_DATE, daysToSubtract, 'days');
+  } else {
+     // Regular post dates
+    switch (index % 15) { 
+      case 0: date = subtractTime(PUBLIC_RELEASE_DATE, 30 + index, 'minutes'); break; 
+      case 1: date = subtractTime(PUBLIC_RELEASE_DATE, 45 + index, 'minutes'); break; 
+      case 2: date = subtractTime(PUBLIC_RELEASE_DATE, 1 + Math.floor(index/5), 'hours'); break;    
+      case 3: date = subtractTime(PUBLIC_RELEASE_DATE, 1.5 + Math.floor(index/5), 'hours'); break;  
+      case 4: date = subtractTime(PUBLIC_RELEASE_DATE, 2 + Math.floor(index/5), 'hours'); break;    
+      case 5: date = subtractTime(PUBLIC_RELEASE_DATE, 2.5 + Math.floor(index/5), 'hours'); break;  
+      case 6: date = subtractTime(PUBLIC_RELEASE_DATE, 3 + Math.floor(index/5), 'hours'); break;    
+      case 7: date = subtractTime(PUBLIC_RELEASE_DATE, 4 + Math.floor(index/5), 'hours'); break;    
+      case 8: date = subtractTime(PUBLIC_RELEASE_DATE, 5 + Math.floor(index/5), 'hours'); break;    
+      case 9: date = subtractTime(PUBLIC_RELEASE_DATE, 6 + Math.floor(index/5), 'hours'); break;    
+      case 10: date = subtractTime(PUBLIC_RELEASE_DATE, 8 + Math.floor(index/5), 'hours'); break;   
+      case 11: date = subtractTime(PUBLIC_RELEASE_DATE, 10 + Math.floor(index/5), 'hours'); break;  
+      case 12: date = subtractTime(PUBLIC_RELEASE_DATE, 1 + Math.floor(index/10), 'days'); break;    
+      case 13: { let d = subtractTime(PUBLIC_RELEASE_DATE, 1 + Math.floor(index/10), 'days'); date = subtractTime(new Date(d), 2, 'hours'); break; }
+      case 14: date = subtractTime(PUBLIC_RELEASE_DATE, 2 + Math.floor(index/10), 'days'); break;   
+      default: date = PUBLIC_RELEASE_DATE.toISOString();
+    }
   }
   
   const likes = Math.floor(Math.random() * 150) + 5;
@@ -229,15 +269,22 @@ export const MOCK_POSTS: Post[] = MOCK_POSTS_INITIAL_DATA.map((postData, index) 
 
 const groupPostCounts: Record<string, number> = {};
 MOCK_POSTS.forEach(post => {
-  groupPostCounts[post.groupId] = (groupPostCounts[post.groupId] || 0) + 1;
+  // Only count non-deleted posts for group counts
+  const expiryDate = addMonths(new Date(post.createdAt), DATA_RETENTION_MONTHS);
+  if (isBefore(PUBLIC_RELEASE_DATE, expiryDate)) {
+    groupPostCounts[post.groupId] = (groupPostCounts[post.groupId] || 0) + 1;
+  }
 });
 
 const groupMemberIds: Record<string, Set<string>> = {};
 MOCK_POSTS.forEach(post => {
-  if (!groupMemberIds[post.groupId]) {
-    groupMemberIds[post.groupId] = new Set();
+  const expiryDate = addMonths(new Date(post.createdAt), DATA_RETENTION_MONTHS);
+  if (isBefore(PUBLIC_RELEASE_DATE, expiryDate)) { // Only consider members from non-deleted posts
+    if (!groupMemberIds[post.groupId]) {
+      groupMemberIds[post.groupId] = new Set();
+    }
+    if(post.userId) groupMemberIds[post.groupId].add(post.userId);
   }
-  if(post.userId) groupMemberIds[post.groupId].add(post.userId);
 });
 MOCK_GROUPS_INITIAL_DEFINITION.forEach(groupDef => {
     if(groupDef.creatorId && groupDef.creatorId !== 'system') {
@@ -261,6 +308,7 @@ export const MOCK_GROUPS: Group[] = MOCK_GROUPS_INITIAL_DEFINITION.map(groupDef 
 
 
 export const MOCK_ACTIVITY_FEED: ActivityItem[] = [
+  // ... (existing activities, ensure their timestamps are consistent with post creation dates)
   {
     id: 'act1', userId: MOCK_USER_UID_1, type: 'USER_CREATED_POST',
     timestamp: MOCK_POSTS.find(p => p.id === '1')?.createdAt || PUBLIC_RELEASE_DATE.toISOString(),
@@ -316,6 +364,18 @@ const MOCK_CHAT_SESSIONS: ChatSession[] = [
         lastMessageId: 'msg2',
         lastMessageText: 'Sure, let me check that out!',
         lastMessageTimestamp: subtractTime(PUBLIC_RELEASE_DATE, 10, 'minutes'),
+    },
+    { // Chat session with a message that should be deleted
+        id: 'chat-old-msg',
+        participantIds: [MOCK_USER_UID_1, MOCK_USER_UID_3],
+        participantPseudonyms: {
+            [MOCK_USER_UID_1]: generatePseudonym(),
+            [MOCK_USER_UID_3]: generatePseudonym(),
+        },
+        lastMessageId: 'msg-old-2',
+        lastMessageText: 'This is the most recent message in an old chat.',
+        // This timestamp makes the last message NOT old, but msg-old-1 is.
+        lastMessageTimestamp: subtractTime(PUBLIC_RELEASE_DATE, 5, 'minutes'),
     }
 ];
 
@@ -332,6 +392,24 @@ const MOCK_MESSAGES: Message[] = [
         senderPseudonym: MOCK_CHAT_SESSIONS[0].participantPseudonyms[MOCK_USER_UID_2],
         text: 'Sure, let me check that out!',
         createdAt: subtractTime(PUBLIC_RELEASE_DATE, 10, 'minutes'),
+    },
+    { // This message should be "deleted"
+        id: 'msg-old-1', chatSessionId: 'chat-old-msg', senderId: MOCK_USER_UID_1,
+        senderPseudonym: MOCK_CHAT_SESSIONS[1].participantPseudonyms[MOCK_USER_UID_1],
+        text: 'This is an old message, created 40 days before PUBLIC_RELEASE_DATE.',
+        createdAt: subtractTime(PUBLIC_RELEASE_DATE, 40, 'days'),
+    },
+    { // This message is newer and should be visible
+        id: 'msg-old-2', chatSessionId: 'chat-old-msg', senderId: MOCK_USER_UID_3,
+        senderPseudonym: MOCK_CHAT_SESSIONS[1].participantPseudonyms[MOCK_USER_UID_3],
+        text: 'This is the most recent message in an old chat.',
+        createdAt: subtractTime(PUBLIC_RELEASE_DATE, 5, 'minutes'),
+    },
+    { // This message should be "nearing deletion"
+        id: 'msg-nearing-deletion', chatSessionId: 'chat1-2', senderId: MOCK_USER_UID_1,
+        senderPseudonym: MOCK_CHAT_SESSIONS[0].participantPseudonyms[MOCK_USER_UID_1],
+        text: 'This message will be deleted soon. Created (1 month - 3 days) before PUBLIC_RELEASE_DATE.',
+        createdAt: subtractTime(PUBLIC_RELEASE_DATE, (DATA_RETENTION_MONTHS * 30 - 3) , 'days'),
     }
 ];
 
@@ -342,6 +420,7 @@ interface PostsState {
   chatSessions: ChatSession[];
   messages: Message[];
   usersForMentions: { id: string, displayName: string, photoURL?: string }[]; 
+  notifiedDeletionItems: Set<string>; // To track sent deletion warnings (itemId)
 
   addPost: (post: Omit<Post, 'id' | 'createdAt' | 'likes' | 'dislikes' | 'commentsCount' | 'comments' | 'pseudonym'> & { isAnonymous?: boolean }) => void;
   addComment: (postId: string, comment: Omit<Comment, 'id' | 'createdAt' | 'likes' | 'dislikes' | 'replies' | 'pseudonym'>) => void;
@@ -352,10 +431,11 @@ interface PostsState {
   updateCommentReactions: (postId: string, commentId: string, newLikes: number, newDislikes: number, actingUserId?: string) => void;
   addGroup: (group: Group) => void;
   
-  addActivityItem: (itemDetails: { userId: string; type: ActivityType; data: ActivityItemData; }) => void;
+  addActivityItem: (itemDetails: { userId: string; type: ActivityType; data: ActivityItemData; timestamp?: string }) => void;
   getUserActivities: (userId: string) => ActivityItem[];
   markActivityAsRead: (userId: string, activityId: string) => void;
   markAllActivitiesAsRead: (userId: string) => void;
+  checkAndNotifyForUpcomingDeletions: (userId: string) => void;
 
   getChatSessionById: (sessionId: string) => ChatSession | undefined;
   getChatSessionsForUser: (userId: string) => ChatSession[];
@@ -366,6 +446,11 @@ interface PostsState {
   getUserById: (userId: string) => { id: string, displayName: string, photoURL?: string } | undefined;
 }
 
+const isItemExpired = (createdAt: string): boolean => {
+  const expiryDate = addMonths(new Date(createdAt), DATA_RETENTION_MONTHS);
+  return isAfter(PUBLIC_RELEASE_DATE, expiryDate);
+};
+
 export const usePostsStore = create<PostsState>((set, get) => ({
   posts: MOCK_POSTS, 
   groups: MOCK_GROUPS,
@@ -373,13 +458,14 @@ export const usePostsStore = create<PostsState>((set, get) => ({
   chatSessions: MOCK_CHAT_SESSIONS,
   messages: MOCK_MESSAGES,
   usersForMentions: ALL_MOCK_USERS.map(u => ({id: u.userId, displayName: u.displayName, photoURL: u.photoURL })).filter(u => u.id !== 'system'),
+  notifiedDeletionItems: new Set<string>(),
 
   addPost: (postData) => {
     const newPost: Post = {
       id: crypto.randomUUID(),
       ...postData,
       pseudonym: postData.isAnonymous ? generatePseudonym() : (postData.userDisplayName || "User"),
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(), // Posts are created "now" relative to user interaction
       likes: 0,
       dislikes: 0,
       comments: [],
@@ -397,7 +483,6 @@ export const usePostsStore = create<PostsState>((set, get) => ({
         groups: updatedGroups.sort((a,b) => a.name.localeCompare(b.name))
       };
     });
-    // Add activity item for post creation
     if (newPost.userId) {
         get().addActivityItem({
             userId: newPost.userId,
@@ -419,7 +504,7 @@ export const usePostsStore = create<PostsState>((set, get) => ({
         ...commentData,
         id: crypto.randomUUID(),
         pseudonym: commentData.isAnonymous ? generatePseudonym() : (commentData.userDisplayName || "User"),
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(), // Comments are created "now"
         likes: 0,
         dislikes: 0,
         replies: [],
@@ -427,11 +512,17 @@ export const usePostsStore = create<PostsState>((set, get) => ({
     set(state => ({
         posts: state.posts.map(post => {
             if (post.id === postId) {
-                const updatedComments = [...(post.comments || []), newComment].sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                 // Filter out expired comments before adding new one
+                const validComments = (post.comments || []).filter(c => !isItemExpired(c.createdAt));
+                const updatedComments = [...validComments, newComment].sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
                 return { ...post, comments: updatedComments, commentsCount: updatedComments.length };
             }
             return post;
-        }),
+        }).map(post => ({ // Recalculate comments for all posts to ensure old ones are filtered
+            ...post,
+            comments: (post.comments || []).filter(c => !isItemExpired(c.createdAt)),
+            commentsCount: (post.comments || []).filter(c => !isItemExpired(c.createdAt)).length,
+        }))
     }));
 
     const post = get().posts.find(p => p.id === postId);
@@ -450,7 +541,7 @@ export const usePostsStore = create<PostsState>((set, get) => ({
                 actorUserId: commentData.userId,
                 actorDisplayName: commentData.userDisplayName,
                 actorPhotoURL: commentData.userPhotoURL,
-                isUserAnonymousPost: post.isAnonymous, // Add if the user's post was anonymous
+                isUserAnonymousPost: post.isAnonymous, 
                 postPseudonym: post.isAnonymous ? post.pseudonym : undefined,
             } as OthersCommentedOnUserPostData,
         });
@@ -478,15 +569,14 @@ export const usePostsStore = create<PostsState>((set, get) => ({
             });
         }
     });
-
   },
-  getPostsByGroupId: (groupId) => get().posts.filter(post => post.groupId === groupId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-  getAllPosts: () => get().posts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+  getPostsByGroupId: (groupId) => get().posts.filter(post => post.groupId === groupId && !isItemExpired(post.createdAt)).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+  getAllPosts: () => get().posts.filter(post => !isItemExpired(post.createdAt)).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   getGroupById: (groupId: string) => get().groups.find(group => group.id === groupId),
   
   updatePostReactions: (postId: string, newLikes: number, newDislikes: number, actingUserId?: string) => {
     const post = get().posts.find(p => p.id === postId);
-    if (!post) return;
+    if (!post || isItemExpired(post.createdAt)) return;
 
     set((state) => ({
       posts: state.posts.map(p =>
@@ -507,7 +597,7 @@ export const usePostsStore = create<PostsState>((set, get) => ({
             groupId: post.groupId, groupName: post.groupName,
             actorUserId: actingUserId, actorDisplayName: actor?.displayName || generatePseudonym(),
             actorPhotoURL: actor?.photoURL,
-            isUserAnonymousPost: post.isAnonymous, // Add if the user's post was anonymous
+            isUserAnonymousPost: post.isAnonymous, 
             postPseudonym: post.isAnonymous ? post.pseudonym : undefined,
           } as OthersLikedUserPostData,
         });
@@ -515,17 +605,24 @@ export const usePostsStore = create<PostsState>((set, get) => ({
     }
   },
   updateCommentReactions: (postId: string, commentId: string, newLikes: number, newDislikes: number, actingUserId?: string) => {
+    const post = get().posts.find(p => p.id === postId);
+    if (!post || isItemExpired(post.createdAt)) return;
+
+    const comment = post.comments?.find(c => c.id === commentId);
+    if (!comment || isItemExpired(comment.createdAt)) return;
+
+
     set(state => ({
-        posts: state.posts.map(post => {
-            if (post.id === postId && post.comments) {
+        posts: state.posts.map(p => {
+            if (p.id === postId && p.comments) {
                 return {
-                    ...post,
-                    comments: post.comments.map(comment => 
-                        comment.id === commentId ? { ...comment, likes: newLikes, dislikes: newDislikes } : comment
-                    )
+                    ...p,
+                    comments: p.comments.map(c => 
+                        c.id === commentId ? { ...c, likes: newLikes, dislikes: newDislikes } : c
+                    ).filter(c => !isItemExpired(c.createdAt)) // Ensure we only keep non-expired comments
                 };
             }
-            return post;
+            return p;
         })
     }));
   },
@@ -549,7 +646,7 @@ export const usePostsStore = create<PostsState>((set, get) => ({
   addActivityItem: (itemDetails) => {
     const newActivity: ActivityItem = {
       id: crypto.randomUUID(), userId: itemDetails.userId, type: itemDetails.type,
-      timestamp: new Date().toISOString(), isRead: false, data: itemDetails.data,
+      timestamp: itemDetails.timestamp || new Date().toISOString(), isRead: false, data: itemDetails.data,
     };
     set((state) => ({
       activityFeed: [newActivity, ...state.activityFeed].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
@@ -560,8 +657,24 @@ export const usePostsStore = create<PostsState>((set, get) => ({
   markAllActivitiesAsRead: (userId: string) => set((state) => ({ activityFeed: state.activityFeed.map(activity => activity.userId === userId ? { ...activity, isRead: true } : activity ) })),
 
   getChatSessionById: (sessionId: string) => get().chatSessions.find(cs => cs.id === sessionId),
-  getChatSessionsForUser: (userId: string) => get().chatSessions.filter(cs => cs.participantIds.includes(userId)).sort((a,b) => new Date(b.lastMessageTimestamp || 0).getTime() - new Date(a.lastMessageTimestamp || 0).getTime()),
-  getMessagesForChatSession: (sessionId: string) => get().messages.filter(msg => msg.chatSessionId === sessionId).sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
+  getChatSessionsForUser: (userId: string) => {
+    return get().chatSessions.filter(cs => {
+        const lastMsg = cs.lastMessageId ? get().messages.find(m => m.id === cs.lastMessageId) : null;
+        if (lastMsg && isItemExpired(lastMsg.createdAt)) {
+            // If last message is expired, we might consider the session "inactive" or hide it
+            // For now, let's filter out sessions where the *last message itself* is expired
+             // But a session might have newer messages. Let's refine: A session is active if it has ANY non-expired messages.
+            const sessionMessages = get().messages.filter(m => m.chatSessionId === cs.id && !isItemExpired(m.createdAt));
+            if(sessionMessages.length === 0) return false; // No valid messages left
+        }
+        return cs.participantIds.includes(userId);
+    }).sort((a,b) => {
+        const aTimestamp = a.lastMessageTimestamp ? new Date(a.lastMessageTimestamp).getTime() : 0;
+        const bTimestamp = b.lastMessageTimestamp ? new Date(b.lastMessageTimestamp).getTime() : 0;
+        return bTimestamp - aTimestamp;
+    });
+  },
+  getMessagesForChatSession: (sessionId: string) => get().messages.filter(msg => msg.chatSessionId === sessionId && !isItemExpired(msg.createdAt)).sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
   
   sendMessage: (chatSessionId, senderId, text, postIdContext) => {
     const chatSession = get().chatSessions.find(cs => cs.id === chatSessionId);
@@ -570,7 +683,8 @@ export const usePostsStore = create<PostsState>((set, get) => ({
     const senderPseudonym = chatSession.participantPseudonyms[senderId] || generatePseudonym();
     const newMessage: Message = {
       id: crypto.randomUUID(), chatSessionId, senderId, senderPseudonym, text,
-      createdAt: new Date().toISOString(), postIdContext,
+      createdAt: new Date().toISOString(), // Messages are created "now"
+      postIdContext,
     };
     set(state => ({
       messages: [...state.messages, newMessage],
@@ -581,7 +695,7 @@ export const usePostsStore = create<PostsState>((set, get) => ({
       ),
     }));
   },
-  startOrGetChatSession: (userId1, userId2) => {
+  startOrGetChatSession: (userId1: string, userId2: string) => {
     const existingSession = get().chatSessions.find(cs => 
         cs.participantIds.includes(userId1) && cs.participantIds.includes(userId2)
     );
@@ -606,5 +720,63 @@ export const usePostsStore = create<PostsState>((set, get) => ({
     return newSession;
   },
   getUserById: (userId: string) => get().usersForMentions.find(u => u.id === userId),
-}));
 
+  checkAndNotifyForUpcomingDeletions: (userId: string) => {
+    const userPosts = get().posts.filter(p => p.userId === userId);
+    const userMessages = get().messages.filter(m => m.senderId === userId);
+    const notifiedItems = get().notifiedDeletionItems;
+
+    userPosts.forEach(post => {
+      if (notifiedItems.has(post.id)) return; // Already notified
+
+      const expiryDate = addMonths(new Date(post.createdAt), DATA_RETENTION_MONTHS);
+      const daysUntilDeletion = differenceInDays(expiryDate, PUBLIC_RELEASE_DATE);
+
+      if (daysUntilDeletion <= DELETION_WARNING_DAYS && daysUntilDeletion >= 0) {
+        get().addActivityItem({
+          userId: userId,
+          type: 'POST_NEARING_DELETION',
+          // Timestamp notification slightly before PUBLIC_RELEASE_DATE for realism if needed
+          timestamp: subtractTime(PUBLIC_RELEASE_DATE, DELETION_WARNING_DAYS - daysUntilDeletion, 'days'),
+          data: {
+            type: 'POST_NEARING_DELETION',
+            postId: post.id,
+            postSnippet: (post.text || "Media post").substring(0, 50) + '...',
+            deletionDate: expiryDate.toISOString(),
+            groupName: post.groupName || 'Unknown Group',
+            groupId: post.groupId,
+          } as PostNearingDeletionData,
+        });
+        set(state => ({ notifiedDeletionItems: new Set(state.notifiedDeletionItems).add(post.id) }));
+      }
+    });
+
+    userMessages.forEach(message => {
+      if (notifiedItems.has(message.id)) return;
+
+      const expiryDate = addMonths(new Date(message.createdAt), DATA_RETENTION_MONTHS);
+      const daysUntilDeletion = differenceInDays(expiryDate, PUBLIC_RELEASE_DATE);
+
+      if (daysUntilDeletion <= DELETION_WARNING_DAYS && daysUntilDeletion >= 0) {
+        const chatSession = get().chatSessions.find(cs => cs.id === message.chatSessionId);
+        const otherParticipantId = chatSession?.participantIds.find(id => id !== userId);
+        const otherParticipant = otherParticipantId ? get().usersForMentions.find(u => u.id === otherParticipantId) : undefined;
+
+        get().addActivityItem({
+          userId: userId,
+          type: 'MESSAGE_NEARING_DELETION',
+          timestamp: subtractTime(PUBLIC_RELEASE_DATE, DELETION_WARNING_DAYS - daysUntilDeletion, 'days'),
+          data: {
+            type: 'MESSAGE_NEARING_DELETION',
+            messageId: message.id,
+            messageSnippet: message.text.substring(0, 50) + '...',
+            chatSessionId: message.chatSessionId,
+            otherParticipantDisplayName: otherParticipant?.displayName || chatSession?.participantPseudonyms[otherParticipantId || ''] || 'User',
+            deletionDate: expiryDate.toISOString(),
+          } as MessageNearingDeletionData,
+        });
+        set(state => ({ notifiedDeletionItems: new Set(state.notifiedDeletionItems).add(message.id) }));
+      }
+    });
+  }
+}));

@@ -16,6 +16,8 @@ export default function ActivityPage() {
   const getUserActivities = usePostsStore(state => state.getUserActivities);
   const markAllActivitiesAsRead = usePostsStore(state => state.markAllActivitiesAsRead);
   const markActivityAsRead = usePostsStore(state => state.markActivityAsRead);
+  const checkAndNotifyForUpcomingDeletions = usePostsStore(state => state.checkAndNotifyForUpcomingDeletions);
+  const activityFeedState = usePostsStore(state => state.activityFeed); // To react to new notifications
 
   const [activities, setActivities] = useState<ActivityItemType[]>([]);
   const [isLoadingActivities, setIsLoadingActivities] = useState(true);
@@ -27,6 +29,8 @@ export default function ActivityPage() {
     }
     if (user && !isGuestMode) { 
       setIsLoadingActivities(true);
+      // Check for deletion warnings before fetching activities
+      checkAndNotifyForUpcomingDeletions(user.uid); 
       const userActivities = getUserActivities(user.uid);
       setActivities(userActivities);
       setIsLoadingActivities(false);
@@ -34,7 +38,8 @@ export default function ActivityPage() {
       setActivities([]);
       setIsLoadingActivities(false);
     }
-  }, [user, isGuestMode, authLoading, getUserActivities, usePostsStore(state => state.activityFeed)]); // Depend on activityFeed for updates
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isGuestMode, authLoading, getUserActivities, checkAndNotifyForUpcomingDeletions, activityFeedState]); 
 
   const handleMarkAllRead = () => {
     if (user && !isGuestMode) {

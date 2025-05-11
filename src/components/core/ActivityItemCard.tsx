@@ -2,13 +2,13 @@
 "use client";
 
 import React from "react";
-import type { ActivityItem, UserCreatedPostData } from "@/lib/types";
-import { formatDistanceToNow } from 'date-fns';
+import type { ActivityItem, UserCreatedPostData, MessageNearingDeletionData, PostNearingDeletionData } from "@/lib/types";
+import { formatDistanceToNow, format } from 'date-fns';
 import Link from 'next/link';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, MessageSquare, ThumbsUp, AlertTriangle, FilePlus, Users, UserCircle2, AtSign, Fingerprint } from "lucide-react";
+import { Eye, MessageSquare, ThumbsUp, AlertTriangle, FilePlus, Users, UserCircle2, AtSign, Fingerprint, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ActivityItemCardProps {
@@ -27,6 +27,8 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
       case 'OTHERS_LIKED_USER_POST': return <ThumbsUp className="h-5 w-5 text-pink-500" />;
       case 'OTHERS_COMMENTED_ON_USER_POST': return <MessageSquare className="h-5 w-5 text-purple-500" />;
       case 'USER_MENTIONED_IN_COMMENT': return <AtSign className="h-5 w-5 text-teal-500" />;
+      case 'POST_NEARING_DELETION': return <Clock className="h-5 w-5 text-orange-500" />;
+      case 'MESSAGE_NEARING_DELETION': return <Clock className="h-5 w-5 text-orange-500" />;
       default:
         const _exhaustiveCheck: never = activity.type;
         return <BellIcon className="h-5 w-5 text-gray-500" />;
@@ -107,11 +109,36 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
         linkPath = data.groupId && data.postId && data.commentId ? `/groups/${data.groupId}/#post-${data.postId}-comment-${data.commentId}` : (data.groupId && data.postId ? `/groups/${data.groupId}/#post-${data.postId}` : undefined);
         break;
       case 'USER_MENTIONED_IN_COMMENT':
-        // For mentions, the target post context (isUserAnonymousPost) isn't typically part of this data structure yet,
-        // but could be added if needed. For now, assumes generic post reference.
         messageParts = [actorSpan, " mentioned you in ", createCommentLink(data), " on post ", createPostLink(data), " in ", groupLink(data.groupId, data.groupName), "."];
         linkPath = data.groupId && data.postId && data.commentId ? `/groups/${data.groupId}/#post-${data.postId}-comment-${data.commentId}` : undefined;
         break;
+      case 'POST_NEARING_DELETION': {
+        const postData = data as PostNearingDeletionData;
+        const deletionDateFormatted = format(new Date(postData.deletionDate), "MMMM d, yyyy");
+        messageParts = [
+          "Your post '", 
+          <span key="postsnippet" className="font-semibold">{postData.postSnippet}</span>,
+          "' in group ",
+          groupLink(postData.groupId, postData.groupName),
+          ` is scheduled for deletion on ${deletionDateFormatted}.`
+        ];
+        linkPath = `/groups/${postData.groupId}/#post-${postData.postId}`;
+        break;
+      }
+      case 'MESSAGE_NEARING_DELETION': {
+        const msgData = data as MessageNearingDeletionData;
+        const deletionDateFormatted = format(new Date(msgData.deletionDate), "MMMM d, yyyy");
+        const chatPartner = msgData.otherParticipantDisplayName ? `with ${msgData.otherParticipantDisplayName}` : 'in a chat';
+        messageParts = [
+          "Your message '",
+          <span key="msgsnippet" className="font-semibold">{msgData.messageSnippet}</span>,
+          `' ${chatPartner} is scheduled for deletion on ${deletionDateFormatted}.`
+        ];
+        // Link to account page or a dedicated messages page if available.
+        // For now, no direct link or a generic one.
+        linkPath = `/account`; // Or perhaps a future /messages page
+        break;
+      }
       default:
         const _exhaustiveCheck: never = data; 
         messageParts = ["New notification."];
@@ -132,7 +159,6 @@ export function ActivityItemCard({ activity, onMarkAsRead }: ActivityItemCardPro
             <div className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-accent" title="Unread"></div>
           )}
           <div className="flex-shrink-0 pt-1">
-            {/* Show specific icon for anonymous user actions, otherwise actor's photo or default icon */}
             {activity.type === 'USER_CREATED_POST' && (activity.data as UserCreatedPostData).isAnonymousPost ? (
                 <Fingerprint className="h-5 w-5 text-primary" />
             ) : activity.data.actorPhotoURL ? (
@@ -186,4 +212,3 @@ const BellIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
   </svg>
 );
-

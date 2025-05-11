@@ -1,5 +1,4 @@
 
-
 export interface Group {
   id: string;
   name: string;
@@ -305,7 +304,9 @@ export type ActivityType =
   | 'USER_POST_FLAGGED' 
   | 'OTHERS_LIKED_USER_POST' 
   | 'OTHERS_COMMENTED_ON_USER_POST'
-  | 'USER_MENTIONED_IN_COMMENT'; // New activity type
+  | 'USER_MENTIONED_IN_COMMENT'
+  | 'POST_NEARING_DELETION' // New activity type for post deletion warning
+  | 'MESSAGE_NEARING_DELETION'; // New activity type for message deletion warning
 
 // Specific data interfaces for each activity type
 interface BaseActivityData {
@@ -367,6 +368,25 @@ export interface UserMentionedInCommentData extends BaseActivityData {
   // actorDisplayName is the display name of the one who mentioned
 }
 
+export interface PostNearingDeletionData extends BaseActivityData {
+  type: 'POST_NEARING_DELETION';
+  postId: string;
+  postSnippet: string;
+  deletionDate: string; // ISO string of when the post will be deleted
+  groupName: string;
+  groupId: string;
+}
+
+export interface MessageNearingDeletionData extends BaseActivityData {
+  type: 'MESSAGE_NEARING_DELETION';
+  messageId: string;
+  messageSnippet: string;
+  chatSessionId: string;
+  otherParticipantDisplayName?: string; // Display name of the other user in the chat
+  deletionDate: string; // ISO string of when the message will be deleted
+}
+
+
 // Discriminated union for ActivityItem data
 export type ActivityItemData =
   | UserCreatedPostData
@@ -374,7 +394,9 @@ export type ActivityItemData =
   | UserPostFlaggedData
   | OthersLikedUserPostData
   | OthersCommentedOnUserPostData
-  | UserMentionedInCommentData; // Added new type
+  | UserMentionedInCommentData
+  | PostNearingDeletionData // Added new type
+  | MessageNearingDeletionData; // Added new type
 
 export interface ActivityItem {
   id: string;
