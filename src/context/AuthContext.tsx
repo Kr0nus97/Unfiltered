@@ -4,9 +4,17 @@
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
-import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+import { 
+  onAuthStateChanged, 
+  signInWithPopup, 
+  signOut as firebaseSignOut,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile
+} from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import type { EmailPasswordFormValues, SignUpFormValues } from '@/lib/types'; // Import new types
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +22,8 @@ interface AuthContextType {
   loading: boolean;
   error: Error | null;
   signInWithGoogle: () => Promise<void>;
+  signUpWithEmail: (values: SignUpFormValues) => Promise<void>;
+  signInWithEmail: (values: EmailPasswordFormValues) => Promise<void>;
   signInAsGuest: () => void;
   signOutUser: () => Promise<void>;
 }
@@ -30,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (currentUser) { // If a user is logged in via Firebase, they are not a guest
+      if (currentUser) { 
         setIsGuestMode(false);
       }
       setLoading(false);
@@ -52,23 +62,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     try {
       await signInWithPopup(auth, googleProvider);
-      // onAuthStateChanged will handle setting user and loading=false
-      // It will also set isGuestMode = false
       toast({
         title: "Signed In",
         description: "Successfully signed in with Google.",
       });
-    } catch (err) {
+    } catch (err: any) {
       setError(err as Error);
       toast({
         title: "Sign-in Error",
-        description: (err as Error).message || "Failed to sign in with Google. Check console for details (e.g. 'auth/popup-closed-by-user' or 'auth/cancelled-popup-request' if popup was closed, or 'auth/unauthorized-domain' if localhost is not whitelisted in Firebase console).",
+        description: err.message || "Failed to sign in with Google. Check console for details.",
         variant: "destructive",
       });
-      setLoading(false); // Ensure loading is false on error
+      setLoading(false);
     }
-    // No finally setLoading(false) here, onAuthStateChanged handles it on success
   };
+
+  const signUpWithEmail = async (values: SignUpFormValues) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      // Optionally update profile with a display name if provided, though not in SignUpFormValues
+      // await updateProfile(userCredential.user, { displayName: values.displayName });
+      // onAuthStateChanged will handle setting the user
+      toast({
+        title: "Account Created",
+        description: "Successfully signed up with email and password.",
+      });
+    } catch (err: any) {
+      setError(err as Error);
+      toast({
+        title: "Sign-up Error",
+        description: err.message || "Failed to sign up with email and password.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
+  const signInWithEmail = async (values: EmailPasswordFormValues) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      toast({
+        title: "Signed In",
+        description: "Successfully signed in with email and password.",
+      });
+    } catch (err: any) {
+      setError(err as Error);
+      toast({
+        title: "Sign-in Error",
+        description: err.message || "Failed to sign in with email and password.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
 
   const signInAsGuest = () => {
     setUser(null);
@@ -86,17 +137,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     try {
       await firebaseSignOut(auth);
-      // onAuthStateChanged will set user to null
-      setIsGuestMode(false); // Explicitly turn off guest mode
+      setIsGuestMode(false); 
       toast({
         title: "Signed Out",
         description: "Successfully signed out.",
       });
-    } catch (err) {
+    } catch (err: any) {
       setError(err as Error);
       toast({
         title: "Sign-out Error",
-        description: (err as Error).message || "Failed to sign out.",
+        description: err.message || "Failed to sign out.",
         variant: "destructive",
       });
     } finally {
@@ -105,7 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isGuestMode, loading, error, signInWithGoogle, signInAsGuest, signOutUser }}>
+    <AuthContext.Provider value={{ user, isGuestMode, loading, error, signInWithGoogle, signUpWithEmail, signInWithEmail, signInAsGuest, signOutUser }}>
       {children}
     </AuthContext.Provider>
   );

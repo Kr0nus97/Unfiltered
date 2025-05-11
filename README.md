@@ -1,3 +1,4 @@
+md
 # UnFiltered - Anonymous Social Platform
 
 This is a Next.js starter project for UnFiltered, an anonymous social media platform, built in Firebase Studio.
@@ -13,7 +14,7 @@ UnFiltered allows users to share opinions and content anonymously within interes
 -   Like/dislike feedback mechanism for posts.
 -   AI-powered content moderation to flag potentially harmful content.
 -   Organization of discussions into groups with search/discovery functionality.
--   Google Account Sign-in for user authentication.
+-   Google Account Sign-in and Email/Password authentication for user accounts.
 
 ## Tech Stack
 
@@ -46,6 +47,7 @@ UnFiltered allows users to share opinions and content anonymously within interes
     *   Go to **Authentication** (in the Build section of the Firebase console).
     *   Click on the **Sign-in method** tab.
     *   Enable **Google** as a sign-in provider. You might need to provide a project support email.
+    *   Enable **Email/Password** as a sign-in provider.
 
 2.  **Configure Environment Variables:**
     *   Rename the `.env` file (if it exists) or create a new file named `.env.local` in the root of your project.
@@ -100,7 +102,7 @@ UnFiltered allows users to share opinions and content anonymously within interes
 -   `src/app/`: Contains all routes, pages, and layouts.
     -   `src/app/page.tsx`: Home feed.
     -   `src/app/groups/`: Group discovery and individual group pages.
-    -   `src/app/account/page.tsx`: User account page for sign-in/out.
+    -   `src/app/account/page.tsx`: User account page for sign-in/out and account creation.
     -   `src/app/activity/page.tsx`: User activity feed.
 -   `src/components/`: Shared UI components.
     -   `src/components/core/`: Application-specific core components (Header, PostCard, GroupCard, CreatePostDialog, etc.).
@@ -120,18 +122,20 @@ UnFiltered allows users to share opinions and content anonymously within interes
 
 -   **Theming**: Updated `globals.css` with the specified color palette and dark mode support. `ThemeToggle` component for switching themes.
 -   **Layout**: App shell with `AppHeader`, `BottomNavigationBar`, main content area.
--   **Authentication**: Google Sign-In via Firebase (`AuthContext.tsx`, Account page). Guest mode implemented.
+-   **Authentication**: Google Sign-In & Email/Password via Firebase (`AuthContext.tsx`, Account page). Guest mode implemented.
 -   **Pseudonym Generation**: Utility in `src/lib/pseudonyms.ts`.
 -   **Mock Data & Store**: `src/store/postsStore.ts` provides mock groups, posts, and activity feed items. Uses Zustand for state management. Local storage used for post reaction persistence.
--   **Post Display**: `PostCard.tsx` renders posts with text, images (URL), video (URL), audio (URL), links, likes/dislikes.
--   **Group Display**: `GroupCard.tsx` for group discovery, including background images.
+-   **Post Display**: `PostCard.tsx` renders posts with text, images (URL), video (URL), audio (URL), links, likes/dislikes, comments with mentions and anonymous posting.
+-   **Group Display**: `GroupCard.tsx` for group discovery, including background images. Group post/member counts reflect mock data.
 -   **Navigation**: Home feed (`/`), Groups page (`/groups`), individual group pages (`/groups/[groupId]`), Account page (`/account`), Activity feed (`/activity`).
--   **Create Post**: Dialog (`CreatePostDialog.tsx`) allows authenticated users to create posts (text, image, video, audio, link), select a group. Max length for text posts.
+-   **Create Post**: Dialog (`CreatePostDialog.tsx`) allows authenticated users to create posts (text, image, video, audio, link), select a group, and choose UnFiltered (anonymous) mode. Max length for text posts.
 -   **Create Group**: Dialog (`CreateGroupDialog.tsx`) allows authenticated users to create new groups with name, description, and optional background image URL.
 -   **AI Moderation**: Integrated `moderateContent` AI flow into the post creation process.
 -   **Markdown Rendering**: `MarkdownRenderer.tsx` for displaying Markdown in posts.
 -   **Activity Feed**: `ActivityPage.tsx` and `ActivityItemCard.tsx` display user-specific activities. PostsStore manages mock activity data. Type-safe activity data structures.
 -   **Responsive Design**: UI adapts to mobile and desktop, including bottom navigation for mobile.
+-   **Messaging**: Chat modal (`ChatModal.tsx`) for user-to-user messaging with post context.
+-   **Post Dates**: Mock post and activity dates are relative to a fixed public release date (10/05/2025).
 
 ## Troubleshooting Authentication Errors
 If you encounter authentication errors (e.g., "Authentication Error: Failed to get authentication state.", issues with Google Sign-In popups, or **"Invalid Domain" / "auth/unauthorized-domain"** errors):
@@ -147,7 +151,7 @@ If you encounter authentication errors (e.g., "Authentication Error: Failed to g
 
 2.  **Firebase Authentication Setup**:
     *   In the Firebase console, go to **Authentication** -> **Sign-in method** tab.
-    *   Confirm that **Google** is **ENABLED** as a sign-in provider.
+    *   Confirm that **Google** and **Email/Password** are **ENABLED** as sign-in providers.
     *   Ensure your project support email is set if required by the Google provider.
 
 3.  **Authorized Domains (VERY IMPORTANT for "auth/unauthorized-domain" errors)**:

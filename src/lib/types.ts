@@ -1,4 +1,5 @@
 
+
 export interface Group {
   id: string;
   name: string;
@@ -384,3 +385,13 @@ export interface ActivityItem {
   data: ActivityItemData;
 }
 
+// For email/password authentication forms
+export interface EmailPasswordFormValues {
+  email: string;
+  password: string;
+}
+
+export interface SignUpFormValues extends EmailPasswordFormValues {
+  confirmPassword: string;
+  // displayName?: string; // Optional, if you want to collect it at sign-up
+}
