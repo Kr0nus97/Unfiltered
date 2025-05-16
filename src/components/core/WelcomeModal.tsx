@@ -2,14 +2,55 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Rocket, Users, Fingerprint, ShieldAlert, MessageSquare, ActivityIcon, LogIn } from 'lucide-react'; // Added LogIn
+import { LockKeyhole, Users, Rocket, ShieldAlert, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const WELCOME_MODAL_DISMISSED_KEY = 'unfilteredWelcomeModalDismissed';
+const WELCOME_MODAL_DISMISSED_KEY = 'unfilteredWelcomeModalDismissed_v2'; // Increment version if content changes significantly
+
+interface WelcomeStepContent {
+  id: number;
+  icon: React.ElementType;
+  iconColor?: string;
+  sectionTitle: string;
+  description: string | React.ReactNode;
+}
+
+const steps: WelcomeStepContent[] = [
+  {
+    id: 1,
+    icon: LockKeyhole,
+    iconColor: "text-purple-400",
+    sectionTitle: "Complete Anonymity",
+    description: "Your identity is protected. Every post you make is assigned a unique pseudonym in the format \"Adjective_Object\".",
+  },
+  {
+    id: 2,
+    icon: Users,
+    iconColor: "text-blue-400",
+    sectionTitle: "Discover & Share",
+    description: "Explore diverse interest-based groups. Share your thoughts, images, videos, audio, and links freely.",
+  },
+  {
+    id: 3,
+    icon: Rocket,
+    iconColor: "text-green-400",
+    sectionTitle: "Engage & Connect",
+    description: "Like, dislike, and comment on posts. Use @mentions to interact and message other users directly.",
+  },
+  {
+    id: 4,
+    icon: ShieldAlert,
+    iconColor: "text-red-400",
+    sectionTitle: "Flexible & Secure",
+    description: "Sign in with Google, Email/Password, or browse as a Guest. AI moderation helps maintain a respectful environment.",
+  },
+];
 
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0); // 0-indexed
 
   useEffect(() => {
     const dismissed = localStorage.getItem(WELCOME_MODAL_DISMISSED_KEY);
@@ -21,57 +62,76 @@ export function WelcomeModal() {
   const handleDismiss = () => {
     localStorage.setItem(WELCOME_MODAL_DISMISSED_KEY, 'true');
     setIsOpen(false);
+    setCurrentStep(0); // Reset for next time if logic changes
+  };
+
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      handleDismiss();
+    }
   };
 
   if (!isOpen) {
     return null;
   }
 
+  const activeStepContent = steps[currentStep];
+  const IconComponent = activeStepContent.icon;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleDismiss(); }}>
-      <DialogContent className="sm:max-w-[525px] bg-card shadow-xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-primary text-center mb-2">Welcome to UnFiltered!</DialogTitle>
-          <DialogDescription className="text-center text-muted-foreground mb-4">
-            UnFiltered is an anonymous social media platform built with Next.js. It's designed for users to share opinions and content freely within interest-based groups.
+      <DialogContent className="sm:max-w-md bg-card shadow-xl p-0 flex flex-col justify-between min-h-[380px]">
+        <DialogHeader className="p-6 text-center relative">
+          <DialogTitle className="text-3xl font-bold mb-1">
+            <span className="bg-gradient-to-r from-fuchsia-500 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              Welcome to UnFiltered!
+            </span>
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground text-sm">
+            Your anonymous space to express yourself freely
           </DialogDescription>
+           <DialogClose asChild className="absolute top-4 right-4">
+            <Button variant="ghost" size="icon" onClick={handleDismiss}>
+              <X className="h-5 w-5" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </DialogClose>
         </DialogHeader>
 
-        <div className="space-y-3 my-4 px-2 text-sm">
-          <p className="font-semibold text-lg text-foreground mb-2">Core Features:</p>
-          <div className="flex items-start space-x-3">
-            <Fingerprint className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-            <p><span className="font-semibold">Anonymous Posting:</span> Share text (Markdown), images, videos, audio, and links with a dynamic pseudonym (e.g., "Clever_Wombat") for each post.</p>
+        <div className="flex flex-col items-center justify-center text-center px-6 py-4 flex-grow">
+          <div className={cn(
+            "mb-4 rounded-full p-3 flex items-center justify-center w-16 h-16",
+            currentStep === 0 ? "bg-purple-500/20" : currentStep === 1 ? "bg-blue-500/20" : currentStep === 2 ? "bg-green-500/20" : "bg-red-500/20"
+          )}>
+            <IconComponent className={cn("w-8 h-8", activeStepContent.iconColor)} />
           </div>
-          <div className="flex items-start space-x-3">
-            <Users className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-            <p><span className="font-semibold">Group-Based Discussions:</span> Discover or create groups for focused conversations.</p>
-          </div>
-          <div className="flex items-start space-x-3">
-            <Rocket className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-            <p><span className="font-semibold">User Interaction:</span> Like, dislike, and comment on posts (with @mentions).</p>
-          </div>
-           <div className="flex items-start space-x-3">
-            <LogIn className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-            <p><span className="font-semibold">Authentication:</span> Sign in with Google, Email/Password, or browse as a Guest.</p>
-          </div>
-          <div className="flex items-start space-x-3">
-            <ShieldAlert className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-            <p><span className="font-semibold">AI Moderation:</span> Content is monitored to flag potentially harmful posts.</p>
-          </div>
-          <div className="flex items-start space-x-3">
-            <ActivityIcon className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-            <p><span className="font-semibold">Activity Feed:</span> Track mentions, post likes, and new group posts.</p>
-          </div>
-          <div className="flex items-start space-x-3">
-            <MessageSquare className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-            <p><span className="font-semibold">Direct Messaging:</span> Message users directly, referencing posts if needed.</p>
-          </div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">{activeStepContent.sectionTitle}</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            {activeStepContent.description}
+          </p>
         </div>
 
-        <DialogFooter className="sm:justify-center mt-6">
-          <Button onClick={handleDismiss} className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
-            Got it!
+        <DialogFooter className="p-6 flex items-center justify-between w-full border-t border-border">
+          <div className="flex space-x-2">
+            {steps.map((step, index) => (
+              <button
+                key={step.id}
+                onClick={() => setCurrentStep(index)}
+                className={cn(
+                  "h-2.5 w-2.5 rounded-full transition-all",
+                  currentStep === index ? "bg-primary w-4" : "bg-muted hover:bg-muted-foreground/50"
+                )}
+                aria-label={`Go to step ${index + 1}`}
+              />
+            ))}
+          </div>
+          <Button
+            onClick={handleNext}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground min-w-[100px]"
+          >
+            {currentStep < steps.length - 1 ? "Next" : "Got it!"}
           </Button>
         </DialogFooter>
       </DialogContent>
