@@ -17,7 +17,7 @@ export default function ActivityPage() {
   const markAllActivitiesAsRead = usePostsStore(state => state.markAllActivitiesAsRead);
   const markActivityAsRead = usePostsStore(state => state.markActivityAsRead);
   const checkAndNotifyForUpcomingDeletions = usePostsStore(state => state.checkAndNotifyForUpcomingDeletions);
-  const activityFeedState = usePostsStore(state => state.activityFeed); // To react to new notifications
+  const activityFeedState = usePostsStore(state => state.activityFeed); 
 
   const [activities, setActivities] = useState<ActivityItemType[]>([]);
   const [isLoadingActivities, setIsLoadingActivities] = useState(true);
@@ -29,7 +29,6 @@ export default function ActivityPage() {
     }
     if (user && !isGuestMode) { 
       setIsLoadingActivities(true);
-      // Check for deletion warnings before fetching activities
       checkAndNotifyForUpcomingDeletions(user.uid); 
       const userActivities = getUserActivities(user.uid);
       setActivities(userActivities);
@@ -57,7 +56,8 @@ export default function ActivityPage() {
 
   if (authLoading || (user && !isGuestMode && isLoadingActivities)) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      // Rely on AppShell for container and px, just add py here if needed, or let AppShell handle it
+      <div>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-primary">Activity Feed</h1>
           <Skeleton className="h-10 w-36" />
@@ -73,7 +73,8 @@ export default function ActivityPage() {
 
   if (!user && isGuestMode) { 
     return (
-      <div className="container mx-auto py-8 px-4 text-center">
+      // Rely on AppShell for container and px, use text-center and mx-auto for content alignment
+      <div className="text-center">
         <h1 className="text-3xl font-bold text-primary mb-6">Activity Feed</h1>
         <Alert className="max-w-md mx-auto bg-card border-border shadow-md">
             <Users className="h-5 w-5 text-accent" />
@@ -91,7 +92,8 @@ export default function ActivityPage() {
   
   if (!user && !isGuestMode) { 
     return (
-      <div className="container mx-auto py-8 px-4 text-center">
+      // Rely on AppShell for container and px
+      <div className="text-center">
         <h1 className="text-3xl font-bold text-primary mb-6">Activity Feed</h1>
         <Alert className="max-w-md mx-auto bg-card border-border shadow-md">
             <LogIn className="h-5 w-5 text-accent" />
@@ -108,7 +110,8 @@ export default function ActivityPage() {
   }
   
   return (
-    <div className="container mx-auto py-8 px-4">
+    // Rely on AppShell for container and px
+    <div>
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b">
         <h1 className="text-3xl font-bold text-primary mb-4 sm:mb-0">Activity Feed</h1>
         {activities.length > 0 && unreadCount > 0 && (
@@ -140,3 +143,5 @@ export default function ActivityPage() {
     </div>
   );
 }
+
+    

@@ -59,9 +59,10 @@ export default function AccountPage() {
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword);
 
 
-  if (loading && !user && !isGuestMode) { // More specific loading state for initial page load before auth status is known
+  if (loading && !user && !isGuestMode) { 
     return (
-      <div className="container mx-auto py-8 px-4">
+      // Rely on AppShell for container and px, just add py here if needed, or let AppShell handle it
+      <div>
         <h1 className="text-3xl font-bold text-primary mb-6 text-center sm:text-left">Account Settings</h1>
         <div className="bg-card p-6 rounded-lg shadow-md border max-w-lg mx-auto">
           <Skeleton className="h-8 w-1/2 mb-4" />
@@ -74,10 +75,11 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    // Rely on AppShell for container and px, use py here if needed
+    <div>
       <h1 className="text-3xl font-bold text-primary mb-6 text-center sm:text-left">Account Settings</h1>
       <div className="bg-card p-6 rounded-lg shadow-md border max-w-lg mx-auto">
-        {user && !isGuestMode ? ( // Google or Email/Pass Signed-In User
+        {user && !isGuestMode ? ( 
           <div className="flex flex-col items-center sm:items-start">
             <div className="flex items-center mb-6">
               <Avatar className="h-16 w-16 mr-4">
@@ -98,7 +100,7 @@ export default function AccountPage() {
              {loading && user ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing Out...</> : <><LogOut className="mr-2 h-4 w-4" /> Sign Out</>}
             </Button>
           </div>
-        ) : isGuestMode ? ( // Guest User
+        ) : isGuestMode ? ( 
            <div className="flex flex-col items-center sm:items-start">
             <div className="flex items-center mb-6">
               <Avatar className="h-16 w-16 mr-4">
@@ -124,7 +126,7 @@ export default function AccountPage() {
                 </Button>
             </div>
           </div>
-        ) : ( // Not signed in, not a guest - Show Sign In / Sign Up options
+        ) : ( 
           <div>
             <h2 className="text-2xl font-semibold text-foreground mb-4 text-center">
               {authMode === "signin" ? "Sign In" : "Create Account"}
@@ -224,3 +226,5 @@ export default function AccountPage() {
     </div>
   );
 }
+
+    
