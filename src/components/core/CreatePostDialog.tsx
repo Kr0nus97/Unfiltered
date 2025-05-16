@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch"; // Import Switch
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { moderateContent, type ModerateContentInput, type ModerateContentOutput } from "@/ai/flows/moderate-content";
 import type { Group, Post, ActivityType, UserCreatedPostData } from "@/lib/types"; 
@@ -34,13 +34,13 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 const postFormSchema = z.object({
   groupId: z.string().min(1, "Please select a group"),
   text: z.string().max(5000, "Post text cannot exceed 5000 characters.").optional(), 
-  imageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-  videoUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-  audioUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-  linkUrl: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-  isAnonymous: z.boolean().optional(), // Add isAnonymous field
+  imageUrl: z.string().url("Please enter a valid URL for the image.").optional().or(z.literal('')),
+  videoUrl: z.string().url("Please enter a valid URL for the video.").optional().or(z.literal('')),
+  audioUrl: z.string().url("Please enter a valid URL for the audio.").optional().or(z.literal('')),
+  linkUrl: z.string().url("Please enter a valid URL for the link.").optional().or(z.literal('')),
+  isAnonymous: z.boolean().optional(),
 }).refine(data => data.text || data.imageUrl || data.videoUrl || data.audioUrl || data.linkUrl, {
-  message: "At least one field (text, image, video, audio, or link) must be filled.",
+  message: "At least one content field (text, image, video, audio, or link) must be filled.",
   path: ["text"], 
 });
 
@@ -69,7 +69,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
       videoUrl: "",
       audioUrl: "",
       linkUrl: "",
-      isAnonymous: false, // Default to not anonymous
+      isAnonymous: false,
     },
   });
 
@@ -82,7 +82,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
         videoUrl: "",
         audioUrl: "",
         linkUrl: "",
-        isAnonymous: false, // Reset anonymous toggle
+        isAnonymous: false,
       });
     }
   }, [isOpen, defaultGroupId, form, groups]);
@@ -97,11 +97,12 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
 
 
   async function onSubmit(data: PostFormValues) {
-    if (!user) { 
+    if (!user || isGuestMode) { 
       toast({
         title: "Authentication Required",
         description: "Please sign in to create a post.",
         variant: "destructive",
+        action: <Button onClick={() => {onOpenChange(false); signInWithGoogle();}}>Sign In</Button>
       });
       return;
     }
@@ -142,47 +143,45 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
             groupName: selectedGroup?.name || data.groupId,
             flagReason: moderationResult.flagReason || "Violating community guidelines",
             isUserAnonymousPost: data.isAnonymous,
-            postPseudonym: data.isAnonymous ? generatePseudonym() : undefined, // Only relevant if post was anonymous
+            postPseudonym: data.isAnonymous ? generatePseudonym() : undefined,
           },
         });
         setIsSubmitting(false);
         return;
       }
 
-      const newPost: Post = {
-        id: crypto.randomUUID(),
+      const newPostData: Omit<Post, 'id' | 'createdAt' | 'likes' | 'dislikes' | 'commentsCount' | 'comments' | 'pseudonym'> = {
         groupId: data.groupId,
         groupName: selectedGroup?.name,
-        pseudonym: data.isAnonymous ? generatePseudonym() : (user.displayName || "User"), // Use generated for anonymous, else display name
         userId: user.uid, 
-        userDisplayName: user.displayName || "Anonymous User", // Store actual user info internally
+        userDisplayName: user.displayName || "Anonymous User",
         userPhotoURL: user.photoURL,
         text: data.text,
         imageUrl: data.imageUrl,
         videoUrl: data.videoUrl,
         audioUrl: data.audioUrl,
         linkUrl: data.linkUrl,
-        createdAt: new Date().toISOString(),
-        likes: 0,
-        dislikes: 0,
-        commentsCount: 0,
-        isAnonymous: data.isAnonymous, // Store anonymous status
+        isAnonymous: data.isAnonymous,
       };
       
-      addPost(newPost); 
-      addActivityItem({
-        userId: user.uid,
-        type: 'USER_CREATED_POST',
-        data: {
-          type: 'USER_CREATED_POST',
-          postId: newPost.id,
-          postSnippet: (newPost.text || "Media post").substring(0, 50) + '...',
-          groupId: newPost.groupId,
-          groupName: newPost.groupName || newPost.groupId,
-          isAnonymousPost: newPost.isAnonymous, // Pass anonymous status to activity
-          postPseudonym: newPost.isAnonymous ? newPost.pseudonym : undefined,
-        } as UserCreatedPostData,
-      });
+      addPost(newPostData); // The store will handle ID, createdAt, pseudonym, etc.
+      const createdPost = usePostsStore.getState().posts.find(p => p.groupId === newPostData.groupId && p.userId === newPostData.userId && p.text === newPostData.text); // Simplistic find
+
+      if (createdPost) {
+        addActivityItem({
+            userId: user.uid,
+            type: 'USER_CREATED_POST',
+            data: {
+            type: 'USER_CREATED_POST',
+            postId: createdPost.id,
+            postSnippet: (createdPost.text || "Media post").substring(0, 50) + '...',
+            groupId: createdPost.groupId,
+            groupName: createdPost.groupName || createdPost.groupId,
+            isAnonymousPost: createdPost.isAnonymous,
+            postPseudonym: createdPost.isAnonymous ? createdPost.pseudonym : undefined,
+            } as UserCreatedPostData,
+        });
+      }
 
 
       toast({
@@ -213,51 +212,26 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
       );
     }
 
-    if (!user && isGuestMode) { 
+    if (!user || isGuestMode) { 
       return (
         <div className="py-6 text-center">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold">Guest Mode Notice</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold">Create a Post</DialogTitle>
           </DialogHeader>
-            <Alert variant="default" className="my-4 text-left bg-secondary/30">
+            <Alert variant="default" className="my-6 text-left bg-secondary/30 border-accent/30">
               <UserCheck className="h-5 w-5 text-accent" />
-              <AlertTitle className="font-semibold">Sign In to Post</AlertTitle>
-              <AlertDescription>
-                You are currently browsing as a guest. To create a post and contribute to the UnFiltered community, please sign in with your Google account. This helps us maintain a safe and accountable environment.
+              <AlertTitle className="font-semibold text-accent">Sign In to Post</AlertTitle>
+              <AlertDescription className="text-muted-foreground">
+                You are currently browsing as a guest. To create a post and contribute to the UnFiltered community, please sign in with your Google account or Email. This helps maintain a safe and enjoyable environment for everyone.
               </AlertDescription>
             </Alert>
           <Button onClick={() => { onOpenChange(false); signInWithGoogle(); }} className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90 w-full">
             <LogIn className="mr-2 h-4 w-4" />
-            Sign in with Google
+            Sign in to Post
           </Button>
           <DialogFooter className="sm:justify-center mt-6">
             <DialogClose asChild>
               <Button type="button" variant="outline" className="w-full">
-                Cancel
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </div>
-      );
-    }
-
-
-    if (!user && !isGuestMode) { 
-      return (
-        <div className="py-10 text-center">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold">Sign In Required</DialogTitle>
-            <DialogDescription className="mt-2">
-              You need to be signed in to create a post on UnFiltered.
-            </DialogDescription>
-          </DialogHeader>
-          <Button onClick={signInWithGoogle} className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
-            <LogIn className="mr-2 h-4 w-4" />
-            Sign in with Google
-          </Button>
-          <DialogFooter className="sm:justify-center mt-8">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
                 Cancel
               </Button>
             </DialogClose>
@@ -301,7 +275,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
               )}
             />
             {form.formState.errors.groupId && (
-              <p className="text-xs text-destructive">{form.formState.errors.groupId.message}</p>
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.groupId.message}</p>
             )}
           </div>
 
@@ -309,12 +283,12 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
             <Label htmlFor="text" className="text-sm font-medium">Your Message (Markdown supported)</Label>
             <Textarea
               id="text"
-              placeholder="What's on your mind?"
+              placeholder="What's on your mind? (Max 5000 characters)"
               {...form.register("text")}
               className="min-h-[100px] resize-y"
             />
              {form.formState.errors.text && ( 
-              <p className="text-xs text-destructive">{form.formState.errors.text.message}</p>
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.text.message}</p>
             )}
           </div>
 
@@ -330,7 +304,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
               />
             </div>
             {form.formState.errors.imageUrl && (
-              <p className="text-xs text-destructive">{form.formState.errors.imageUrl.message}</p>
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.imageUrl.message}</p>
             )}
           </div>
 
@@ -346,7 +320,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
               />
             </div>
             {form.formState.errors.videoUrl && (
-              <p className="text-xs text-destructive">{form.formState.errors.videoUrl.message}</p>
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.videoUrl.message}</p>
             )}
           </div>
 
@@ -362,7 +336,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
               />
             </div>
             {form.formState.errors.audioUrl && (
-              <p className="text-xs text-destructive">{form.formState.errors.audioUrl.message}</p>
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.audioUrl.message}</p>
             )}
           </div>
 
@@ -378,12 +352,12 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
               />
             </div>
             {form.formState.errors.linkUrl && (
-              <p className="text-xs text-destructive">{form.formState.errors.linkUrl.message}</p>
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.linkUrl.message}</p>
             )}
           </div>
           
-          {user && !isGuestMode && ( // Show UnFiltered mode toggle only to logged-in, non-guest users
-            <div className="flex items-center space-x-2 pt-2">
+          {user && !isGuestMode && (
+            <div className="flex items-center space-x-3 pt-2">
               <Controller
                 control={form.control}
                 name="isAnonymous"
@@ -396,7 +370,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
                   />
                 )}
               />
-              <Label htmlFor="isAnonymous" className="text-sm flex items-center">
+              <Label htmlFor="isAnonymous" className="text-sm flex items-center cursor-pointer">
                 <Fingerprint className="h-4 w-4 mr-2 text-primary" /> Post in UnFiltered Mode (Anonymous)
               </Label>
             </div>
@@ -413,7 +387,7 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button type="submit" disabled={isSubmitting || (groups.length === 0 && !defaultGroupId)} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -437,4 +411,3 @@ export function CreatePostDialog({ isOpen, onOpenChange, defaultGroupId }: Creat
     </Dialog>
   );
 }
-

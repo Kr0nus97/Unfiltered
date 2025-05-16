@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -21,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Group, ActivityType, UserCreatedGroupData } from "@/lib/types";
 import { usePostsStore } from "@/store/postsStore";
 import { useAuth } from "@/context/AuthContext";
-import { Loader2, LogIn, Image as ImageIcon, UserCheck, AlertCircle } from "lucide-react"; // Added UserCheck, AlertCircle
+import { Loader2, LogIn, Image as ImageIcon, UserCheck, AlertCircle } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const groupFormSchema = z.object({
@@ -64,42 +65,39 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
   }, [isOpen, form]);
 
   async function onSubmit(data: GroupFormValues) {
-    if (!user || isGuestMode) { // User must be logged in and not a guest
+    if (!user || isGuestMode) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to create a group.",
         variant: "destructive",
+        action: <Button onClick={() => { onOpenChange(false); signInWithGoogle(); }}>Sign In</Button>
       });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const newGroupId = crypto.randomUUID();
-      const newGroup: Group = {
-        id: newGroupId,
+      const newGroup: Omit<Group, 'id' | 'postCount' | 'memberCount'> = { // Store will assign ID and counts
         name: data.name,
         description: data.description,
         backgroundImageUrl: data.backgroundImageUrl || undefined,
-        creatorId: user.uid, // user is guaranteed to be non-null here
-        postCount: 0,
-        memberCount: 1, 
+        creatorId: user.uid,
       };
 
-      addGroup(newGroup);
+      addGroup(newGroup); // Store handles creation of ID and initial counts
+      const createdGroup = usePostsStore.getState().groups.find(g => g.name === newGroup.name && g.creatorId === newGroup.creatorId); // Simplistic find
       
-      // Add activity item for group creation
-      addActivityItem({
-        userId: user.uid, // user is guaranteed to be non-null
-        type: 'USER_CREATED_GROUP',
-        data: {
-          type: 'USER_CREATED_GROUP', // Discriminator
-          groupId: newGroupId,
-          groupName: data.name,
-          // actorUserId and other actor fields can be omitted if it's the user's own action
-        } as UserCreatedGroupData,
-      });
-
+      if (createdGroup) {
+        addActivityItem({
+          userId: user.uid,
+          type: 'USER_CREATED_GROUP',
+          data: {
+            type: 'USER_CREATED_GROUP',
+            groupId: createdGroup.id,
+            groupName: createdGroup.name,
+          } as UserCreatedGroupData,
+        });
+      }
 
       toast({
         title: "Group Created!",
@@ -129,51 +127,26 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
       );
     }
 
-    if (!user && isGuestMode) { // Guest mode
+    if (!user || isGuestMode) {
       return (
         <div className="py-6 text-center">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold">Guest Mode Notice</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold">Create New Group</DialogTitle>
           </DialogHeader>
-            <Alert variant="default" className="my-4 text-left bg-secondary/30">
+            <Alert variant="default" className="my-6 text-left bg-secondary/30 border-accent/30">
               <UserCheck className="h-5 w-5 text-accent" />
-              <AlertTitle className="font-semibold">Sign In to Create Groups</AlertTitle>
-              <AlertDescription>
-                You are currently browsing as a guest. To create a new group, please sign in with your Google account.
+              <AlertTitle className="font-semibold text-accent">Sign In to Create Groups</AlertTitle>
+              <AlertDescription className="text-muted-foreground">
+                You are currently browsing as a guest. To create a new group and build a community, please sign in with your Google account or Email.
               </AlertDescription>
             </Alert>
           <Button onClick={() => { onOpenChange(false); signInWithGoogle(); }} className="mt-4 bg-accent text-accent-foreground hover:bg-accent/90 w-full">
             <LogIn className="mr-2 h-4 w-4" />
-            Sign in with Google
+            Sign in to Create Group
           </Button>
           <DialogFooter className="sm:justify-center mt-6">
             <DialogClose asChild>
               <Button type="button" variant="outline" className="w-full">
-                Cancel
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </div>
-      );
-    }
-
-
-    if (!user && !isGuestMode) { // Not signed in, not guest
-      return (
-        <div className="py-10 text-center">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold">Sign In Required</DialogTitle>
-            <DialogDescription className="mt-2">
-              You need to be signed in to create a new group.
-            </DialogDescription>
-          </DialogHeader>
-          <Button onClick={signInWithGoogle} className="mt-6 bg-accent text-accent-foreground hover:bg-accent/90">
-            <LogIn className="mr-2 h-4 w-4" />
-            Sign in with Google
-          </Button>
-          <DialogFooter className="sm:justify-center mt-8">
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
                 Cancel
               </Button>
             </DialogClose>
@@ -200,7 +173,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
               {...form.register("name")}
             />
             {form.formState.errors.name && (
-              <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
             )}
           </div>
 
@@ -213,7 +186,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
               className="min-h-[100px] resize-y"
             />
             {form.formState.errors.description && (
-              <p className="text-xs text-destructive">{form.formState.errors.description.message}</p>
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.description.message}</p>
             )}
           </div>
 
@@ -229,7 +202,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange }: CreateGroupDialogPro
               />
             </div>
             {form.formState.errors.backgroundImageUrl && (
-              <p className="text-xs text-destructive">{form.formState.errors.backgroundImageUrl.message}</p>
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.backgroundImageUrl.message}</p>
             )}
           </div>
 
