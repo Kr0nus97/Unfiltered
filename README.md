@@ -1,7 +1,7 @@
 md
 # UnFiltered - Anonymous Social Platform
 
-This is a Next.js starter project for UnFiltered, an anonymous social media platform, built in Firebase Studio.
+This is a Next.js starter project for UnFiltered, an anonymous social media platform.
 
 To get started, take a look at `src/app/page.tsx`.
 
