@@ -92,12 +92,6 @@ export function WelcomeModal() {
           <DialogDescription className="text-muted-foreground text-sm">
             Your anonymous space to express yourself freely
           </DialogDescription>
-           <DialogClose asChild className="absolute top-4 right-4">
-            <Button variant="ghost" size="icon" onClick={handleDismiss}>
-              <X className="h-5 w-5" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </DialogClose>
         </DialogHeader>
 
         <div className="flex flex-col items-center justify-center text-center px-6 py-4 flex-grow">
